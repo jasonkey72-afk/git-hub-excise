@@ -1,0 +1,53 @@
+git init = git 저장소 초기화(현재 디렉토리를 git 저장소로 초기화하는 명령어)
+즉, 이제 git을 시작하겠다.
+git add = 저장할 코드를 지정
+git commit = 저장된 코드를 커밋
+git push = 커밋된 코드를 원격 저장소에 업로드
+git status = 현재 상태 확인(어떤 파일이 변경됐는지, 어떤 파일이 add(지정)됐는지 등 변경 상태를 확인하는 명령어)
+git log = 커밋 로그 확인(커밋한 기록을 확인하는 명령어), 즉 저장 내역을 확인하는 명령어
+git diff = 변경된 코드 확인(어떤 부분이 변경됐는지 확인하는 명령어)
+git reset = 변경된 코드 되돌리기(변경된 코드를 이전 상태로 되돌리는 명령어)
+git checkout = 특정 커밋으로 되돌리기(특정 커밋으로 되돌리는 명령어)
+git branch = 브랜치 확인(현재 브랜치 확인 및 새로운 브랜치 생성)
+git merge = 브랜치 합치기(다른 브랜치의 코드를 현재 브랜치에 합치는 명령어)
+
+git push 테스트 하기
+
+
+git branch = 브랜치 확인(현재 브랜치 확인 및 새로운 브랜치 생성)
+git push --set-upstream origin third (git hub에 third라는 브랜치를 만들고, 로컬의 third 브랜치와 연결하는 명령어)
+
+git branch 브랜치이름 : 브랜치 만드는 명령어
+git switch 브랜치명 = 브랜치 이동(다른 브랜치로 이동하는 명령어)
+git switch -c 브랜치명 = 브랜치 생성 후 이동(브랜치를 만들고 바로 이동하는 명령어)
+
+git merge 브랜치명 = 브랜치 합치기(다른 브랜치의 코드를 현재 브랜치에 합치는 명령어)
+(그전에 최초 브랜치로 먼저 이동 후 합치기)
+-> 생각보다 잘 안씀
+-> 대부분 git hub에서 pull request를 통해 합치기
+git pull = 원격 저장소의 코드를 가져오기(원격 저장소의 코드를 로컬 저장소로 가져오는 명령어)
+
+코드를 뒤로 되돌리기
+git reset --hard HEAD~1 = 마지막 커밋을 삭제하고 이전 상태로 되돌리기
+예). git reset --hard (origin/min의 commit id) = 특정 커밋으로 되돌리기(commit 번호의 앞 10자리 입력)
+
+
+[협업하기]
+1. 브랜치 생성 및 이동
+2. 기능 개발 및 코드 저장
+3. git push origin 브랜치명 = 원격 저장소에 코드 업로드 + Pull request 생성(git hub에서)
+4. github에서 merge(합치기) 후, 로컬 저장소로 가져오기
+5. git pull origin 브랜치명 = 원격 저장소의 코드를 로컬 저장소로 가져오기
+
+
+main branch 최초 개발
+이후 "기능 브랜치"에서 각자 개발
+develop branch에서 기능 브랜치의 코드를 합치고, main branch에 merge
+
+git clone = 원격 저장소를 로컬로 복제(원격 저장소의 코드를 로컬 저장소로 가져오는 명령어)
+내 코드가 pc에 아무것도 없을 때
+
+git stash = 임시로 코드 저장(현재 작업 중인 코드를 임시로 저장하는 명령어)
+git stash pop = 임시로 저장한 코드를 다시 불러오기
+git stash list = 임시로 저장한 코드 확인(임시로 저장한 코드 목록을 확인하는 명령어)
+git stash apply = 임시로 저장한 코드 적용(임시로 저장한 코드를 현재 작업 중인 코드에 적용하는 명령어)
