@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vibe Coding TF Curriculum</title>
+<style>
+:root{--bg:#080b18;--panel:#101629;--text:#f4f7ff;--muted:#9fb0d0;--blue:#35a7ff;--purple:#9b5cff;--green:#50e3a4;--yellow:#ffd166;--red:#ff5c7a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 20%,#17234d 0,#080b18 42%,#050711 100%);font-family:Segoe UI,Apple SD Gothic Neo,Noto Sans KR,sans-serif;color:var(--text);overflow:hidden}.deck{width:100vw;height:100vh;position:relative}.slide{position:absolute;inset:0;padding:64px 78px;display:none;overflow:hidden}.slide.active{display:flex;flex-direction:column;justify-content:center;animation:fadeIn .55s ease}.slide:before{content:"";position:absolute;inset:-30%;background:linear-gradient(120deg,transparent 35%,rgba(53,167,255,.08),transparent 65%);animation:sweep 7s linear infinite;pointer-events:none}.kicker{color:var(--green);font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:18px}.title{font-size:62px;line-height:1.08;font-weight:900;letter-spacing:-.04em;margin:0 0 22px}.subtitle{font-size:25px;color:var(--muted);line-height:1.45;max-width:1000px}.big{font-size:84px}.accent{background:linear-gradient(90deg,var(--blue),var(--purple));-webkit-background-clip:text;color:transparent}.grid{display:grid;gap:22px}.grid.cols3{grid-template-columns:repeat(3,1fr)}.grid.cols2{grid-template-columns:repeat(2,1fr)}.card{background:rgba(16,22,41,.78);border:1px solid rgba(255,255,255,.13);border-radius:26px;padding:26px 28px;box-shadow:0 24px 70px rgba(0,0,0,.25);backdrop-filter:blur(10px)}.card h3{margin:0 0 12px;font-size:28px}.card p,.card li{font-size:20px;line-height:1.45;color:#dbe5ff}.icon{font-size:42px;margin-bottom:10px}.appear{opacity:0;transform:translateY(28px)}.active .appear{animation:up .7s ease forwards}.active .d1{animation-delay:.12s}.active .d2{animation-delay:.28s}.active .d3{animation-delay:.44s}.active .d4{animation-delay:.60s}.active .d5{animation-delay:.76s}.active .d6{animation-delay:.92s}.timeline{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:26px}.day{min-height:420px;border-radius:28px;padding:22px;background:linear-gradient(180deg,rgba(53,167,255,.18),rgba(155,92,255,.08));border:1px solid rgba(255,255,255,.12);position:relative;overflow:hidden}.day b{font-size:32px}.day h3{font-size:22px;margin:12px 0;color:var(--yellow)}.day p{font-size:17px;color:#d6def7;line-height:1.4}.flow{display:flex;align-items:center;gap:18px;justify-content:center;margin-top:40px}.node{width:142px;height:142px;border-radius:34px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:21px;font-weight:800;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);box-shadow:0 0 36px rgba(53,167,255,.15)}.arrow{font-size:42px;color:var(--blue);animation:pulse 1.4s ease infinite}.terminal{background:#02050c;border:1px solid #243653;border-radius:24px;padding:28px;width:880px;margin-top:30px;box-shadow:0 30px 80px rgba(0,0,0,.35);font-family:Cascadia Code,Consolas,monospace;font-size:25px;color:#b8ffda}.cursor{display:inline-block;width:12px;height:28px;background:var(--green);vertical-align:-5px;animation:blink .8s infinite}.progress{position:fixed;left:0;bottom:0;height:5px;background:linear-gradient(90deg,var(--blue),var(--purple));width:0%;z-index:10;transition:width .3s}.nav{position:fixed;right:28px;bottom:22px;color:#8ea2c9;font-size:14px;z-index:10}.table{width:100%;border-collapse:collapse;margin-top:24px;overflow:hidden;border-radius:22px}.table th,.table td{padding:18px 16px;border-bottom:1px solid rgba(255,255,255,.12);font-size:18px;text-align:left}.table th{color:var(--green);background:rgba(255,255,255,.06)}.badge{display:inline-block;padding:8px 14px;border-radius:99px;background:rgba(80,227,164,.14);border:1px solid rgba(80,227,164,.35);font-size:17px;color:#caffe5}.note{font-size:19px;color:#aebde0;margin-top:24px}.split{display:grid;grid-template-columns:1.05fr .95fr;gap:36px;align-items:center}.robot{font-size:190px;filter:drop-shadow(0 0 40px rgba(53,167,255,.4));animation:float 3s ease-in-out infinite}.type{display:inline-block;border-right:3px solid var(--green);white-space:nowrap;overflow:hidden;animation:type 3.2s steps(36,end),caret .8s infinite}.mini{font-size:18px;color:#9fb0d0}.check{color:var(--green);font-weight:800}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes up{to{opacity:1;transform:translateY(0)}}@keyframes sweep{from{transform:translateX(-30%)}to{transform:translateX(30%)}}@keyframes pulse{50%{transform:translateX(6px);opacity:.55}}@keyframes blink{50%{opacity:0}}@keyframes caret{50%{border-color:transparent}}@keyframes type{from{width:0}to{width:100%}}@keyframes float{50%{transform:translateY(-20px)}}
+
+.day{cursor:pointer;transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}.day:hover{transform:translateY(-10px) scale(1.02);border-color:rgba(80,227,164,.65);box-shadow:0 22px 60px rgba(53,167,255,.24)}.day:after{content:'클릭하여 상세 보기  →';position:absolute;left:22px;bottom:18px;color:var(--green);font-size:15px;font-weight:800;opacity:.82}.day .badge{margin-top:14px}.detail-overlay{position:fixed;inset:0;z-index:50;background:rgba(3,6,15,.96);backdrop-filter:blur(18px);display:none;overflow:auto}.detail-overlay.open{display:block;animation:fadeIn .35s ease}.detail-shell{max-width:1420px;margin:0 auto;padding:42px 50px 70px}.detail-top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:26px;position:sticky;top:0;padding:10px 0 20px;background:linear-gradient(180deg,rgba(3,6,15,.98) 72%,transparent);z-index:2}.back-btn{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:var(--text);border-radius:14px;padding:12px 18px;font-size:17px;font-weight:800;cursor:pointer}.back-btn:hover{border-color:var(--green);color:var(--green)}.detail-title{font-size:44px;margin:0;letter-spacing:-.03em}.detail-summary{font-size:20px;color:var(--muted);margin:8px 0 28px}.detail-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:22px}.detail-card{background:linear-gradient(180deg,rgba(16,22,41,.92),rgba(10,15,30,.92));border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:24px}.detail-card h3{font-size:24px;margin:0 0 16px;color:var(--yellow)}.task-list{display:grid;gap:12px}.task{display:grid;grid-template-columns:94px 1fr;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.09)}.task:last-child{border-bottom:0}.time{color:var(--green);font-weight:900}.task strong{display:block;font-size:19px;margin-bottom:5px}.task span,.detail-card li{color:#dce5ff;line-height:1.5;font-size:17px}.deliverable{padding:14px 16px;border-radius:15px;background:rgba(53,167,255,.11);border-left:4px solid var(--blue);margin-bottom:12px}.criterion{display:flex;gap:10px;margin:10px 0;color:#dce5ff;font-size:17px}.criterion b{color:var(--green)}.day-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0 28px}.day-tab{padding:10px 15px;border-radius:999px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#dce5ff;cursor:pointer;font-weight:800}.day-tab.active,.day-tab:hover{background:rgba(80,227,164,.14);border-color:rgba(80,227,164,.5);color:var(--green)}.detail-footer{margin-top:24px;color:var(--muted);font-size:15px}.click-hint{color:var(--green);font-size:17px;margin-top:12px;font-weight:700;animation:pulse 1.4s ease infinite}@media(max-width:1000px){.detail-grid{grid-template-columns:1fr}.detail-shell{padding:26px 22px}.timeline{grid-template-columns:1fr 1fr}.slide{padding:38px 28px;overflow:auto}.title{font-size:44px}.day{min-height:330px}}
+@media print{body{overflow:visible}.slide{position:relative;display:flex!important;page-break-after:always;height:100vh}.nav,.progress{display:none}}
+</style>
+</head>
+<body>
+<div class="deck">
+<section class="slide active">
+  <div class="kicker appear d1">Vibe Coding TF</div>
+  <h1 class="title big appear d2">5일 만에<br><span class="accent">업무 자동화</span>를 만든다</h1>
+  <p class="subtitle appear d3">대상: 프로그램을 전혀 모르는 부서원 3~4명 · 기간: 5일 × 8시간 · 방식: AI Agent와 함께 실습 중심</p>
+  <div class="terminal appear d4"><span class="type">AI에게 업무를 설명하면, 자동화가 시작됩니다.</span><span class="cursor"></span></div>
+</section>
+<section class="slide">
+  <div class="split">
+    <div>
+      <div class="kicker appear d1">Course Goal</div>
+      <h2 class="title appear d2">코딩 교육이 아니라<br><span class="accent">업무 해결 훈련</span>입니다</h2>
+      <p class="subtitle appear d3">수강생은 코드를 외우지 않습니다. 반복 업무를 설명하고, AI가 만든 코드를 실행·검증·개선하는 방법을 배웁니다.</p>
+    </div>
+    <div class="robot appear d4">🤖</div>
+  </div>
+</section>
+<section class="slide">
+  <div class="kicker appear d1">Target Workflow</div>
+  <h2 class="title appear d2">사내 업무 자동화 흐름</h2>
+  <div class="flow appear d3"><div class="node">Web<br>접속</div><div class="arrow">→</div><div class="node">Excel<br>다운로드</div><div class="arrow">→</div><div class="node">Python<br>가공</div><div class="arrow">→</div><div class="node">Spotfire<br>분석</div><div class="arrow">→</div><div class="node">Report<br>저장</div></div>
+</section>
+<section class="slide">
+  <div class="kicker appear d1">Tools</div>
+  <h2 class="title appear d2">사용 프로그램 / 플랫폼</h2>
+  <div class="grid cols3">
+    <div class="card appear d3"><div class="icon">🧠</div><h3>Vibe Coding</h3><p>업무를 자연어로 설명하고 AI와 함께 구현</p></div>
+    <div class="card appear d4"><div class="icon">💻</div><h3>VS Code + OpenCode</h3><p>AI Agent 기반 개발 환경 구축</p></div>
+    <div class="card appear d5"><div class="icon">🔌</div><h3>API</h3><p>사내 시스템과 데이터를 연결하는 기본 개념</p></div>
+    <div class="card appear d3"><div class="icon">📊</div><h3>Excel</h3><p>다운로드 파일 정리, 집계, 저장 자동화</p></div>
+    <div class="card appear d4"><div class="icon">🌐</div><h3>Web 자동화</h3><p>Edge 접속, 입력, 클릭, 결과 저장</p></div>
+    <div class="card appear d5"><div class="icon">🧭</div><h3>GitHub</h3><p>버전 관리와 팀 협업 개념 적용</p></div>
+  </div>
+</section>
+<section class="slide">
+  <div class="kicker appear d1">5 Days Curriculum</div>
+  <h2 class="title appear d2">전체 커리큘럼</h2>
+  <div class="timeline">
+    <div class="day appear d2" data-day="1" role="button" tabindex="0"><b>Day 1</b><h3>환경 구축</h3><p>VS Code, Python, OpenCode 설치<br>AI Agent 사용법<br>첫 실행 성공</p><span class="badge">결과물: Hello Automation</span></div>
+    <div class="day appear d3" data-day="2" role="button" tabindex="0"><b>Day 2</b><h3>Python 최소 핵심</h3><p>변수, 반복, 조건, 함수<br>파일 읽기/쓰기<br>Excel 자동 처리</p><span class="badge">결과물: Excel 정리 프로그램</span></div>
+    <div class="day appear d4" data-day="3" role="button" tabindex="0"><b>Day 3</b><h3>Web & API</h3><p>API, JSON 개념<br>Edge 자동화<br>검색·다운로드 실습</p><span class="badge">결과물: Web 자동 다운로드</span></div>
+    <div class="day appear d5" data-day="4" role="button" tabindex="0"><b>Day 4</b><h3>실무 연결</h3><p>Spotfire 데이터 흐름<br>Excel 분석 자동화<br>GitHub 협업 개념</p><span class="badge">결과물: 분석 자동화 초안</span></div>
+    <div class="day appear d6" data-day="5" role="button" tabindex="0"><b>Day 5</b><h3>팀 프로젝트</h3><p>업무 선정<br>AI와 구현<br>발표 및 개선</p><span class="badge">결과물: 실제 자동화 프로그램</span></div>
+  </div>
+  <div class="click-hint appear d6">각 Day 카드를 클릭하면 상세 일정과 과제가 열립니다.</div>
+</section>
+<section class="slide">
+  <div class="kicker appear d1">Day 1</div><h2 class="title appear d2">환경 구축과 첫 성공 경험</h2>
+  <div class="grid cols2"><div class="card appear d3"><h3>오전</h3><p>Vibe Coding 개념<br>VS Code 설치<br>Python 설치<br>Workspace 만들기</p></div><div class="card appear d4"><h3>오후</h3><p>OpenCode Agent 설치<br>Prompt 입력<br>Terminal 실행<br>첫 Python 파일 실행</p></div></div>
+  <p class="note appear d5">핵심 메시지: “내가 코드를 다 몰라도 실행하고 고칠 수 있다.”</p>
+</section>
+<section class="slide">
+  <div class="kicker appear d1">Day 2</div><h2 class="title appear d2">Python은 외우지 않고 사용한다</h2>
+  <div class="terminal appear d3">사용자: 엑셀 파일을 열어서 A열의 빈칸을 제거하고 새 파일로 저장해줘<br><br>AI: 코드를 작성했습니다. 실행해보세요.<span class="cursor"></span></div>
+  <div class="grid cols3" style="margin-top:26px"><div class="card appear d4"><h3>읽기</h3><p>CSV / Excel 열기</p></div><div class="card appear d5"><h3>가공</h3><p>필터, 정렬, 집계</p></div><div class="card appear d6"><h3>저장</h3><p>결과 파일 생성</p></div></div>
+</section>
+<section class="slide">
+  <div class="kicker appear d1">Day 3</div><h2 class="title appear d2">Web 접속 자동화와 API</h2>
+  <div class="flow appear d3"><div class="node">Edge<br>실행</div><div class="arrow">→</div><div class="node">로그인</div><div class="arrow">→</div><div class="node">검색어<br>입력</div><div class="arrow">→</div><div class="node">버튼<br>클릭</div><div class="arrow">→</div><div class="node">Excel<br>저장</div></div>
+  <p class="subtitle appear d4" style="margin-top:36px">API는 “시스템끼리 데이터를 주고받는 약속”으로 설명하고, GET / POST / JSON만 실습 중심으로 다룹니다.</p>
+</section>
+<section class="slide">
+  <div class="kicker appear d1">Day 4</div><h2 class="title appear d2">Excel · Spotfire · GitHub 연결</h2>
+  <table class="table appear d3"><tr><th>영역</th><th>학습 내용</th><th>업무 적용</th></tr><tr><td>Excel</td><td>다운로드 파일 정리, 집계, 저장</td><td>반복 보고서 자동 생성</td></tr><tr><td>Spotfire</td><td>데이터 Import, Refresh, Export 흐름</td><td>Chart 분석 업무 단축</td></tr><tr><td>GitHub</td><td>Commit, Push, Pull 개념</td><td>팀별 자동화 코드 관리</td></tr></table>
+</section>
+<section class="slide">
+  <div class="kicker appear d1">Day 5</div><h2 class="title appear d2">최종 팀 프로젝트</h2>
+  <div class="grid cols2"><div class="card appear d3"><h3>프로젝트 예시 A</h3><p>사내 Web 접속 → 조건 입력 → 조회 → Excel 다운로드 → 파일명 자동 저장</p></div><div class="card appear d4"><h3>프로젝트 예시 B</h3><p>Excel 취합 → 데이터 정리 → Spotfire 입력용 파일 생성 → 결과 저장</p></div></div>
+  <p class="note appear d5">마지막 2시간은 발표보다 “동료 업무에 실제 적용 가능한지”를 함께 검증합니다.</p>
+</section>
+<section class="slide">
+  <div class="kicker appear d1">Prompt Pattern</div><h2 class="title appear d2">초보자용 Prompt 공식</h2>
+  <div class="grid cols2"><div class="card appear d3"><h3>1. 업무 설명</h3><p>“나는 매일 이 사이트에 접속해서 조건을 넣고 결과를 엑셀로 저장한다.”</p></div><div class="card appear d4"><h3>2. 입력/출력 정의</h3><p>“입력은 날짜와 품번이고, 출력은 다운로드된 Excel 파일이다.”</p></div><div class="card appear d5"><h3>3. 제약조건</h3><p>“Edge 브라우저를 사용하고, 회사 보안상 계정 정보는 코드에 넣지 않는다.”</p></div><div class="card appear d6"><h3>4. 실행 요청</h3><p>“초보자도 실행할 수 있게 단계별로 만들어줘.”</p></div></div>
+</section>
+<section class="slide">
+  <div class="kicker appear d1">Final Outcome</div><h2 class="title appear d2">5일 후 기대 수준</h2>
+  <div class="grid cols2"><div class="card appear d3"><p><span class="check">✓</span> AI Agent에게 업무를 설명할 수 있다</p><p><span class="check">✓</span> VS Code에서 코드를 실행할 수 있다</p><p><span class="check">✓</span> 오류 메시지를 AI와 함께 해결할 수 있다</p></div><div class="card appear d4"><p><span class="check">✓</span> Excel 자동화를 만들 수 있다</p><p><span class="check">✓</span> Web 접속 자동화를 설계할 수 있다</p><p><span class="check">✓</span> Spotfire 업무 자동화 흐름을 만들 수 있다</p></div></div>
+</section>
+<section class="slide">
+  <div class="kicker appear d1">Teaching Ratio</div><h2 class="title appear d2">강의 30% · 실습 70%</h2>
+  <div class="flow appear d3"><div class="node">설명<br>15분</div><div class="arrow">→</div><div class="node">시연<br>20분</div><div class="arrow">→</div><div class="node">개별<br>실습</div><div class="arrow">→</div><div class="node">오류<br>해결</div><div class="arrow">→</div><div class="node">업무<br>적용</div></div>
+  <p class="subtitle appear d4" style="margin-top:34px">초보자 교육의 핵심은 “설명량”이 아니라 “성공 경험의 반복”입니다.</p>
+</section>
+<section class="slide">
+  <div class="kicker appear d1">Close</div><h2 class="title big appear d2">반복 업무는<br><span class="accent">AI와 함께 줄인다</span></h2>
+  <p class="subtitle appear d3">Vibe Coding TF의 목표는 개발자가 되는 것이 아니라, 부서 업무를 직접 개선할 수 있는 사람이 되는 것입니다.</p>
+</section>
+</div>
+<div class="detail-overlay" id="detailOverlay" aria-hidden="true">
+  <div class="detail-shell">
+    <div class="detail-top">
+      <div><div class="kicker" id="detailKicker">DAY DETAIL</div><h2 class="detail-title" id="detailTitle"></h2></div>
+      <button class="back-btn" id="closeDetail">← 전체 커리큘럼</button>
+    </div>
+    <p class="detail-summary" id="detailSummary"></p>
+    <div class="day-tabs" id="dayTabs"></div>
+    <div class="detail-grid">
+      <div class="detail-card"><h3>시간대별 교육·실습</h3><div class="task-list" id="taskList"></div></div>
+      <div>
+        <div class="detail-card" style="margin-bottom:22px"><h3>오늘의 과제</h3><div id="assignment"></div></div>
+        <div class="detail-card" style="margin-bottom:22px"><h3>제출 결과물</h3><div id="deliverables"></div></div>
+        <div class="detail-card"><h3>완료 기준</h3><div id="criteria"></div></div>
+      </div>
+    </div>
+    <div class="detail-footer">ESC 또는 ‘전체 커리큘럼’ 버튼으로 돌아갈 수 있습니다.</div>
+  </div>
+</div>
+<div class="progress" id="progress"></div><div class="nav">← → / Space 이동 · F11 전체화면</div>
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+let idx=0;
+const progress=document.getElementById('progress');
+const overlay=document.getElementById('detailOverlay');
+const curriculum={
+1:{title:'Day 1 · 환경 구축과 첫 실행',summary:'개발 경험이 없어도 VS Code와 OpenCode를 설치하고, AI에게 요청하여 첫 Python 프로그램을 실행합니다.',tasks:[['08:30–09:10','오리엔테이션','TF 목표, 5일간 완성할 자동화 흐름, 보안 원칙을 이해합니다.'],['09:10–10:20','VS Code 설치','설치 경로 확인, 기본 화면·폴더·파일·터미널의 역할을 익힙니다.'],['10:30–11:40','Python 설치 및 확인','Python 설치 후 python --version으로 정상 설치 여부를 확인합니다.'],['11:40–12:30','Workspace 만들기','교육용 폴더와 main.py 파일을 만들고 폴더 구조를 이해합니다.'],['13:30–14:50','OpenCode 설치·연결','AI Agent를 실행하고 작업 폴더를 인식시키는 방법을 익힙니다.'],['15:00–16:10','첫 Prompt 실습','“초보자가 실행할 수 있는 Python 프로그램을 만들어줘”라고 요청합니다.'],['16:20–17:10','실행과 오류 해결','터미널에서 실행하고 오류 메시지를 AI에게 전달해 수정합니다.'],['17:10–17:30','정리·회고','오늘 성공한 명령어와 오류 해결 과정을 기록합니다.']],assignment:'AI Agent에게 요청하여 이름과 오늘 날짜를 출력하고, 실행 완료 메시지를 보여주는 프로그램을 만듭니다.',deliverables:['day1_hello_automation 폴더','main.py','실행 성공 화면 캡처','사용한 Prompt 기록'],criteria:['VS Code에서 교육 폴더를 열 수 있다.','OpenCode에 요청해 코드를 생성할 수 있다.','터미널에서 main.py를 직접 실행할 수 있다.','오류가 발생하면 오류 내용을 AI에게 전달할 수 있다.']},
+2:{title:'Day 2 · Python 최소 핵심과 Excel',summary:'Python 문법을 외우기보다 AI가 작성한 코드를 읽고, Excel 파일을 안전하게 가공하는 방법을 실습합니다.',tasks:[['08:30–09:20','전일 복습','폴더 열기, OpenCode 실행, Python 파일 실행을 혼자 반복합니다.'],['09:20–10:20','변수·조건·반복','업무 예시로 변수, if, for가 어떤 역할을 하는지 확인합니다.'],['10:30–11:30','함수와 파일 경로','반복 코드를 함수로 묶고 입력·출력 파일 경로를 다룹니다.'],['11:30–12:30','Excel 읽기','pandas 또는 openpyxl로 원본 파일을 열고 컬럼을 확인합니다.'],['13:30–14:40','데이터 정리','빈칸 제거, 필터, 정렬, 중복 제거를 Prompt로 요청합니다.'],['14:50–15:50','집계와 요약','그룹별 합계·개수·평균을 계산합니다.'],['16:00–16:50','결과 저장','원본을 보존하고 날짜가 포함된 새 Excel 파일로 저장합니다.'],['16:50–17:30','검증','원본 행 수, 결과 행 수, 주요 값이 맞는지 체크합니다.']],assignment:'제공된 Excel에서 빈 행과 중복 데이터를 제거하고, 부서별 건수를 요약한 시트를 추가해 새 파일로 저장합니다.',deliverables:['day2_excel_automation 폴더','excel_cleaner.py','원본 Excel과 결과 Excel','처리 규칙을 적은 README.txt'],criteria:['원본 파일을 변경하지 않는다.','빈칸·중복 제거가 정확하다.','요약 시트가 자동 생성된다.','다른 파일명으로 바꿔도 다시 실행할 수 있다.']},
+3:{title:'Day 3 · Web 자동화와 API',summary:'Edge에서 접속·입력·클릭·다운로드 과정을 자동화하고, API와 JSON의 기본 흐름을 체험합니다.',tasks:[['08:30–09:20','Web 자동화 구조','브라우저, 요소, 입력, 클릭, 대기의 의미를 이해합니다.'],['09:20–10:30','Playwright 환경 구성','Edge/Chromium 실행, 테스트 페이지 접속을 확인합니다.'],['10:40–11:50','입력과 클릭','검색창 입력, 버튼 클릭, 결과 대기를 실습합니다.'],['11:50–12:30','다운로드 저장','다운로드 파일명과 저장 폴더를 자동 지정합니다.'],['13:30–14:30','API·JSON 개념','GET, POST, 요청, 응답, JSON을 업무 언어로 이해합니다.'],['14:40–15:40','공개 API 실습','간단한 API 응답을 받아 필요한 값을 출력합니다.'],['15:50–16:50','Web 자동화 통합','접속→입력→검색→다운로드를 하나의 프로그램으로 연결합니다.'],['16:50–17:30','보안·예외처리','계정정보 분리, Timeout, 화면 변경 시 대응 방법을 정리합니다.']],assignment:'교육용 Web 페이지에서 조건을 입력하고 검색 버튼을 누른 뒤, 결과 파일을 지정 폴더에 날짜별 이름으로 저장합니다.',deliverables:['day3_web_automation 폴더','web_download.py','downloads 폴더','성공·실패 로그 파일'],criteria:['Edge 또는 Chromium이 자동 실행된다.','검색 조건이 자동 입력된다.','결과 파일이 지정 경로에 저장된다.','비밀번호를 코드에 직접 작성하지 않는다.']},
+4:{title:'Day 4 · Excel·Spotfire·GitHub 연결',summary:'다운로드한 데이터를 Spotfire 분석용으로 가공하고, 팀이 함께 관리할 수 있도록 Git/GitHub의 핵심 흐름을 적용합니다.',tasks:[['08:30–09:30','통합 흐름 설계','Web 다운로드→Excel 가공→Spotfire 입력 파일의 데이터 흐름을 그립니다.'],['09:30–10:40','Spotfire 입력 규격','컬럼명, 데이터 형식, 결측치 등 입력 파일 조건을 정의합니다.'],['10:50–12:00','Excel 변환 자동화','다운로드 파일을 Spotfire용 포맷으로 자동 변환합니다.'],['12:00–12:30','결과 검증','Spotfire에서 파일을 열어 컬럼과 데이터가 정상인지 확인합니다.'],['13:30–14:30','Git 개념','버전, Commit, 변경 이력, 되돌리기의 필요성을 이해합니다.'],['14:40–15:40','GitHub 적용','Repository, Push, Pull과 팀 작업 규칙을 실습합니다.'],['15:50–16:50','프로젝트 구조 정리','src, input, output, logs, README 구조로 정돈합니다.'],['16:50–17:30','최종 프로젝트 준비','Day 5에 구현할 실제 업무와 성공 기준을 확정합니다.']],assignment:'Day 3에서 다운로드한 파일을 Spotfire 입력용 규격으로 가공하고, 프로젝트를 Git 저장소에 Commit합니다.',deliverables:['day4_spotfire_pipeline 폴더','transform_for_spotfire.py','Spotfire 입력용 Excel/CSV','README.md와 Git Commit 이력'],criteria:['Spotfire에서 결과 파일이 정상 열린다.','필수 컬럼과 데이터 형식이 유지된다.','프로젝트 폴더 구조가 표준화되어 있다.','Git Commit으로 변경 이력을 남긴다.']},
+5:{title:'Day 5 · 실제 업무 자동화 프로젝트',summary:'TF 구성원이 선정한 실제 사내 반복 업무를 자동화하고, 동료가 다시 실행할 수 있는 형태로 완성합니다.',tasks:[['08:30–09:10','업무 정의','현재 작업 순서, 입력, 출력, 예외 상황, 소요시간을 정리합니다.'],['09:10–10:00','Prompt 설계','AI에게 전달할 요구사항을 단계별로 작성합니다.'],['10:00–12:00','1차 구현','핵심 흐름이 끝까지 한 번 실행되도록 최소 기능을 구현합니다.'],['13:00–14:20','통합 테스트','실제 또는 교육용 데이터로 전체 과정을 반복 테스트합니다.'],['14:20–15:20','오류·예외 처리','파일 없음, 화면 지연, 잘못된 입력에 대한 메시지를 추가합니다.'],['15:30–16:20','사용자 문서','설치·실행·입력·결과 확인 방법을 README로 작성합니다.'],['16:20–17:00','동료 실행 테스트','개발하지 않은 다른 구성원이 문서만 보고 실행합니다.'],['17:00–17:30','발표·개선','기존 소요시간, 자동화 후 시간, 개선 항목을 발표합니다.']],assignment:'Spotfire, Excel, Web 중 하나 이상의 실제 반복 업무를 선정해 시작부터 결과 저장까지 실행 가능한 자동화 프로그램을 완성합니다.',deliverables:['최종 프로젝트 전체 폴더','실행 프로그램 및 설정 파일','샘플 입력·출력 파일','README 사용설명서','Before/After 업무시간 비교표'],criteria:['다른 구성원이 설명서만 보고 실행할 수 있다.','핵심 업무가 시작부터 결과 저장까지 이어진다.','오류 발생 시 원인을 알 수 있는 메시지가 표시된다.','기존 대비 절감 시간과 기대 효과를 설명할 수 있다.']}
+};
+function show(n){slides[idx].classList.remove('active');idx=(n+slides.length)%slides.length;slides[idx].classList.add('active');progress.style.width=((idx+1)/slides.length*100)+'%'}
+function openDay(day){const d=curriculum[day];document.getElementById('detailKicker').textContent='VIBE CODING TF · DAY '+day;document.getElementById('detailTitle').textContent=d.title;document.getElementById('detailSummary').textContent=d.summary;document.getElementById('taskList').innerHTML=d.tasks.map(t=>`<div class="task"><div class="time">${t[0]}</div><div><strong>${t[1]}</strong><span>${t[2]}</span></div></div>`).join('');document.getElementById('assignment').innerHTML=`<div class="deliverable">${d.assignment}</div>`;document.getElementById('deliverables').innerHTML=d.deliverables.map(x=>`<div class="deliverable">${x}</div>`).join('');document.getElementById('criteria').innerHTML=d.criteria.map(x=>`<div class="criterion"><b>✓</b><span>${x}</span></div>`).join('');document.getElementById('dayTabs').innerHTML=Object.keys(curriculum).map(x=>`<button class="day-tab ${String(day)===x?'active':''}" data-open-day="${x}">Day ${x}</button>`).join('');overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';overlay.scrollTop=0;}
+function closeDay(){overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.body.style.overflow='hidden';}
+progress.style.width=(1/slides.length*100)+'%';
+document.addEventListener('keydown',e=>{if(overlay.classList.contains('open')){if(e.key==='Escape')closeDay();return;}if(['ArrowRight',' ','PageDown'].includes(e.key))show(idx+1);if(['ArrowLeft','PageUp'].includes(e.key))show(idx-1);});
+document.addEventListener('click',e=>{const card=e.target.closest('[data-day]');const tab=e.target.closest('[data-open-day]');if(card){e.stopPropagation();openDay(card.dataset.day);return;}if(tab){openDay(tab.dataset.openDay);return;}if(e.target.closest('#closeDetail')){closeDay();return;}if(!overlay.classList.contains('open'))show(idx+1);});
+document.addEventListener('keydown',e=>{const card=e.target.closest?.('[data-day]');if(card&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openDay(card.dataset.day);}});
+</script>
+</body></html>

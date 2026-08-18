@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import win32com.client; print\\('pywin32 OK'\\)\")",
+      "Bash(python -c ' *)",
+      "Bash(python -c \"import pptx; print\\('python-pptx OK'\\)\")",
+      "Bash(python pptTpdf.py test_sample.pptx)",
+      "Bash(mkdir -p test_batch)",
+      "Bash(cp test_sample.pptx test_batch/sample1.pptx)",
+      "Bash(cp test_sample.pptx test_batch/sample2.pptx)",
+      "Bash(python pptTpdf.py test_batch)",
+      "Bash(python -c \"import customtkinter; print\\('customtkinter', customtkinter.__version__\\)\")",
+      "Bash(pip install *)",
+      "PowerShell(cd \"c:\\\\Python\\\\company\\\\pdfConverer\"; Stop-Process -Id \\(Get-Content pid.txt\\) -Force -ErrorAction SilentlyContinue; Remove-Item pid.txt, screenshot.png -Force -ErrorAction SilentlyContinue; Get-ChildItem)",
+      "Bash(python -c \"import PyInstaller; print\\('PyInstaller', PyInstaller.__version__\\)\")",
+      "Bash(mkdir -p \"/c/Python/company/company\")",
+      "Read(//c/Python/company//**)",
+      "Bash(rmdir \"/c/Python/company/company\" 2>&1 *)",
+      "Bash(python -m PyInstaller --onefile --windowed --name \"PPT_to_PDF_변환기\" --distpath ./build_dist --workpath ./build_work --specpath ./build_work pptTpdf.py)",
+      "Bash(powershell.exe -NoProfile -Command \"Compress-Archive -Path 'dist_pkg\\\\*' -DestinationPath 'PPT_to_PDF_변환기_배포버전.zip' -Force\")",
+      "Bash(powershell.exe -NoProfile -Command \"Compress-Archive -Path 'src_pkg\\\\*' -DestinationPath 'PPT_to_PDF_변환기_소스코드.zip' -Force\")",
+      "Bash(rm -rf dist_pkg src_pkg)"
+    ],
+    "additionalDirectories": [
+      "C:\\Python\\company\\company"
+    ]
+  }
+}

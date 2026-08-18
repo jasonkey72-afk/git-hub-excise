@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ' *)",
+      "Bash(iconv -f cp949 -t utf-8)",
+      "Bash(python \"C:\\\\Users\\\\jason\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Python-company\\\\c5793198-4f75-4110-a858-f34e2ee9a175\\\\scratchpad\\\\repro_stepdialog.py\")"
+    ]
+  }
+}

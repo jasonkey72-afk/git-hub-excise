@@ -1,0 +1,107 @@
+{
+  "title": "샘플 - 일일 실적 조회",
+  "description": "사내 포털에서 실적을 조회해 엑셀로 내려받고 집계 프로그램까지 실행하는 예시입니다. 각 단계를 열어 [브라우저에서 선택]으로 대상만 다시 지정하면 바로 쓸 수 있습니다.",
+  "browser": "edge",
+  "keep_browser": true,
+  "use_profile": true,
+  "created": "",
+  "modified": "",
+  "steps": [
+    {
+      "name": "사내 포털 열기",
+      "action": "open_url",
+      "target": {},
+      "target_text": "",
+      "value": "https://portal.company.com",
+      "timeout": 60.0,
+      "wait_after": 1.0,
+      "optional": false,
+      "enabled": true,
+      "note": "로그인이 유지되지 않으면 [브라우저 열기]로 미리 한 번 로그인해 두세요."
+    },
+    {
+      "name": "조회 기준월 입력",
+      "action": "input",
+      "target": {},
+      "target_text": "label=조회월",
+      "value": "{{이번달}}",
+      "timeout": 15.0,
+      "wait_after": 0.3,
+      "optional": false,
+      "enabled": true,
+      "note": "{{이번달}}은 자동으로 채워집니다. 직접 물어보게 하려면 {{조회월}}로 바꾸세요."
+    },
+    {
+      "name": "사번 입력",
+      "action": "input",
+      "target": {},
+      "target_text": "label=사번",
+      "value": "{{사번}}",
+      "timeout": 15.0,
+      "wait_after": 0.3,
+      "optional": false,
+      "enabled": true,
+      "note": "실행할 때마다 사번을 물어봅니다."
+    },
+    {
+      "name": "조회 버튼 클릭",
+      "action": "click",
+      "target": {},
+      "target_text": "text=조회",
+      "value": "",
+      "timeout": 20.0,
+      "wait_after": 1.0,
+      "optional": false,
+      "enabled": true,
+      "note": ""
+    },
+    {
+      "name": "조회 결과가 나올 때까지 대기",
+      "action": "wait_text",
+      "target": {},
+      "target_text": "",
+      "value": "조회 완료",
+      "timeout": 60.0,
+      "wait_after": 0.5,
+      "optional": false,
+      "enabled": true,
+      "note": "화면에 실제로 표시되는 문구로 바꿔 주세요."
+    },
+    {
+      "name": "엑셀 내려받기",
+      "action": "click",
+      "target": {},
+      "target_text": "text=엑셀 다운로드",
+      "value": "",
+      "timeout": 20.0,
+      "wait_after": 5.0,
+      "optional": false,
+      "enabled": true,
+      "note": "내려받기 폴더: %LOCALAPPDATA%\\jobScenario\\downloads"
+    },
+    {
+      "name": "집계 프로그램 실행",
+      "action": "run_program",
+      "target": {},
+      "target_text": "",
+      "value": "C:\\사내프로그램\\집계.exe",
+      "timeout": 15.0,
+      "wait_after": 0.5,
+      "optional": false,
+      "enabled": true,
+      "note": "실제 경로로 바꿔 주세요. 인자가 있으면 뒤에 이어서 적습니다."
+    },
+    {
+      "name": "완료 안내",
+      "action": "message",
+      "target": {},
+      "target_text": "",
+      "value": "일일 실적 조회가 끝났습니다.",
+      "timeout": 15.0,
+      "wait_after": 0.0,
+      "optional": false,
+      "enabled": true,
+      "note": ""
+    }
+  ]
+}
