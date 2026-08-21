@@ -268,6 +268,88 @@ GIT_GLOSSARY = [
     ]),
 ]
 
+# (원문에서 찾을 키워드들, 진단명, 해결 방법) — push/pull 등에서 자주 나는 오류를 초보자 눈높이로 안내한다.
+GIT_ERROR_GUIDE = [
+    (["authentication failed", "could not read username", "could not read password", "terminal prompts disabled"],
+     "GitHub 인증 실패",
+     "GitHub 로그인 정보가 확인되지 않았습니다. GitHub는 비밀번호 로그인을 지원하지 않습니다.\n\n"
+     "해결 방법:\n"
+     "1) push/pull 시 로그인 창이 뜨면 브라우저로 GitHub 로그인을 완료하세요.\n"
+     "2) 로그인 창이 안 뜨면 GitHub 홈페이지 > Settings > Developer settings에서\n"
+     "   Personal Access Token을 발급받아, 비밀번호 입력란에 그 토큰을 붙여넣으세요."),
+    (["permission denied (publickey)"],
+     "SSH 키 인증 실패",
+     "SSH 방식 주소(git@github.com:...)를 쓰는데 등록된 SSH 키가 없습니다.\n\n"
+     "해결 방법:\n"
+     "1) 저장소 URL을 https://github.com/... 형태로 바꿔서 다시 시도하거나\n"
+     "2) GitHub Settings > SSH and GPG keys에 내 컴퓨터의 SSH 공개키를 등록하세요."),
+    (["repository not found", "remote: not found"],
+     "저장소를 찾을 수 없음",
+     "저장소 주소가 틀렸거나, 비공개(private) 저장소인데 접근 권한이 없습니다.\n\n"
+     "해결 방법:\n"
+     "1) 저장소 URL 철자를 다시 확인하세요.\n"
+     "2) private 저장소라면 저장소 소유자에게 Collaborator로 초대해달라고 요청하세요."),
+    (["failed to push some refs", "non-fast-forward", "updates were rejected", "fetch first"],
+     "Push 거부됨 (원격이 앞서 있음)",
+     "내가 모르는 사이 원격 저장소에 다른 커밋이 먼저 올라갔습니다.\n\n"
+     "해결 방법:\n"
+     "'Push (스마트)' 버튼은 이 상황을 자동으로 감지해서 먼저 Pull한 뒤 다시 Push를 시도합니다.\n"
+     "그래도 안 되면 아래 로그에서 충돌 여부를 확인하세요."),
+    (["conflict"],
+     "병합 충돌 (Conflict)",
+     "같은 부분을 서로 다르게 고쳐서 Git이 자동으로 합치지 못했습니다.\n\n"
+     "해결 방법:\n"
+     "충돌난 파일을 열어 <<<<<<< / ======= / >>>>>>> 표시 사이 내용을 직접 정리한 뒤\n"
+     "다시 Add하고 커밋하세요."),
+    (["could not resolve host", "unable to access", "failed to connect", "network is unreachable"],
+     "네트워크 연결 문제",
+     "인터넷 연결이 끊겼거나 방화벽/프록시가 GitHub 접속을 막고 있습니다.\n\n"
+     "해결 방법:\n"
+     "1) 인터넷 연결 상태를 확인하세요.\n"
+     "2) 회사/학교 네트워크라면 방화벽이나 프록시 설정을 확인하세요."),
+    (["would be overwritten by"],
+     "커밋 안 된 변경사항 충돌",
+     "커밋하지 않은 변경사항이 있어서 다른 브랜치의 내용을 가져올 수 없습니다.\n\n"
+     "해결 방법:\n"
+     "먼저 'Stash 저장'을 누르거나, 변경사항을 Add 후 커밋한 다음 다시 시도하세요."),
+    (["dubious ownership"],
+     "폴더 소유권 문제",
+     "Windows 보안 정책 때문에 이 폴더를 신뢰할 수 없다고 Git이 판단했습니다.\n\n"
+     "해결 방법:\n"
+     "아래 콘솔창에 다음을 입력해 실행하세요 (경로는 실제 저장소 경로로 바꾸세요):\n"
+     "config --global --add safe.directory <저장소 경로>"),
+    (["ssl certificate problem", "certificate verify failed"],
+     "SSL 인증서 오류",
+     "보안 소프트웨어(백신, 회사 프록시 등)가 인증서 확인을 막고 있을 수 있습니다.\n\n"
+     "해결 방법:\n"
+     "회사/학교 네트워크라면 관리자에게 문의하세요. 개인 PC라면 백신의 'HTTPS 검사' 기능을 잠시 꺼보세요."),
+    (["not a git repository"],
+     "Git 저장소가 아님",
+     "지금 열려 있는 폴더가 Git 저장소가 아닙니다.\n\n"
+     "해결 방법:\n"
+     "상단의 '폴더 열기'로 올바른 저장소 폴더를 선택하거나, '복제(Clone)'로 새로 받아오세요."),
+    (["please tell me who you are", "user.email", "user.name"],
+     "Git 사용자 정보 미설정",
+     "커밋하려면 Git에 이름과 이메일을 먼저 등록해야 합니다.\n\n"
+     "해결 방법:\n"
+     "아래 콘솔창에 다음을 한 줄씩 입력해 실행하세요:\n"
+     "config --global user.name \"내이름\"\n"
+     "config --global user.email \"내이메일@example.com\""),
+]
+
+
+def diagnose_git_error(text):
+    lowered = text.lower()
+    for keywords, title, explanation in GIT_ERROR_GUIDE:
+        if any(k in lowered for k in keywords):
+            return title, explanation
+    return (
+        "알 수 없는 오류",
+        "이 오류에 대한 자동 안내가 준비되어 있지 않습니다.\n\n"
+        "아래 '오류 원문'을 복사해서 동료나 검색엔진, 또는 AI에게 물어보면\n"
+        "빠르게 원인을 찾을 수 있습니다.",
+    )
+
 
 class App(ctk.CTk):
     def __init__(self):
@@ -520,7 +602,7 @@ class App(ctk.CTk):
                 self._ui(lambda: self.path_label.configure(text=self.git.path))
                 self._ui(self.refresh_status)
             except GitCommandError as e:
-                self.log(f"복제 실패: {e}", "error")
+                self._handle_git_error("복제 실패", e)
 
         self._run_in_thread(task)
 
@@ -548,6 +630,51 @@ class App(ctk.CTk):
                 ctk.CTkLabel(
                     row, text=desc, anchor="w", justify="left", wraplength=540,
                 ).pack(anchor="w", padx=10, pady=(0, 6))
+
+    # ---------- error helper ----------
+    def _handle_git_error(self, title, exc):
+        text = str(exc)
+        self.log(f"{title}: {text.splitlines()[-1] if text.strip() else exc}", "error")
+        self._ui(lambda: self.show_error_helper(title, text))
+
+    def show_error_helper(self, title, raw_text, diagnosis=None):
+        diag_title, explanation = diagnosis if diagnosis else diagnose_git_error(raw_text)
+
+        win = ctk.CTkToplevel(self)
+        win.title("오류 도우미")
+        win.geometry("640x560")
+        win.attributes("-topmost", True)
+
+        ctk.CTkLabel(
+            win, text=f"⚠ {title}", anchor="w",
+            font=ctk.CTkFont(size=16, weight="bold"), text_color="#e53935",
+        ).pack(anchor="w", padx=15, pady=(15, 5), fill="x")
+
+        ctk.CTkLabel(
+            win, text=f"진단: {diag_title}", anchor="w",
+            font=ctk.CTkFont(size=14, weight="bold"),
+        ).pack(anchor="w", padx=15, pady=(5, 0), fill="x")
+        ctk.CTkLabel(
+            win, text=explanation, anchor="w", justify="left", wraplength=600,
+        ).pack(anchor="w", padx=15, pady=(5, 15), fill="x")
+
+        ctk.CTkLabel(win, text="오류 원문 (직접 선택하거나 아래 버튼으로 복사할 수 있습니다):", anchor="w").pack(
+            anchor="w", padx=15, fill="x"
+        )
+        text_box = ctk.CTkTextbox(win, height=180, font=ctk.CTkFont(family="Consolas", size=12))
+        text_box.pack(fill="both", expand=True, padx=15, pady=(5, 10))
+        text_box.insert("1.0", raw_text)
+
+        btn_row = ctk.CTkFrame(win, fg_color="transparent")
+        btn_row.pack(fill="x", padx=15, pady=(0, 15))
+
+        def copy_to_clipboard():
+            self.clipboard_clear()
+            self.clipboard_append(raw_text)
+            messagebox.showinfo("복사됨", "오류 내용이 클립보드에 복사되었습니다.", parent=win)
+
+        ctk.CTkButton(btn_row, text="📋 오류 내용 복사", command=copy_to_clipboard).pack(side="left")
+        ctk.CTkButton(btn_row, text="닫기", fg_color="gray40", hover_color="gray30", command=win.destroy).pack(side="right")
 
     # ---------- git console ----------
     DESTRUCTIVE_TOKENS = ("--hard", "--force", "-f", "-fd", "-fdx", "clean")
@@ -598,7 +725,9 @@ class App(ctk.CTk):
             if result.stdout.strip():
                 self.log(result.stdout.rstrip("\n"), "info")
             if result.returncode != 0:
-                self.log(result.stderr.rstrip("\n") or f"(종료 코드 {result.returncode})", "error")
+                err_text = result.stderr.rstrip("\n") or f"(종료 코드 {result.returncode})"
+                self.log(err_text, "error")
+                self._ui(lambda: self.show_error_helper(f"'git {' '.join(args)}' 실행 실패", err_text))
             elif result.stderr.strip():
                 self.log(result.stderr.rstrip("\n"), "warning")
             self._ui(self.refresh_status)
@@ -684,7 +813,7 @@ class App(ctk.CTk):
             self.git.checkout(branch_name)
             self.log(f"'{branch_name}' 브랜치로 전환했습니다.", "success")
         except GitCommandError as e:
-            messagebox.showerror("브랜치 전환 실패", str(e))
+            self._handle_git_error("브랜치 전환 실패", e)
         self.refresh_status()
 
     def on_stage_selected(self):
@@ -720,7 +849,7 @@ class App(ctk.CTk):
             self.log(f"커밋 완료: {message}", "success")
             self.commit_entry.delete(0, "end")
         except Exception as e:
-            messagebox.showerror("커밋 실패", str(e))
+            self._handle_git_error("커밋 실패", e)
         self.refresh_status()
 
     def on_fetch(self):
@@ -730,7 +859,7 @@ class App(ctk.CTk):
                 self.git.fetch()
                 self.log("Fetch 완료.", "success")
             except GitCommandError as e:
-                self.log(f"Fetch 실패: {e}", "error")
+                self._handle_git_error("Fetch 실패", e)
             self._ui(self.refresh_status)
 
         self._run_in_thread(task)
@@ -742,7 +871,7 @@ class App(ctk.CTk):
             except GitConflictError as e:
                 self._report_conflict(e)
             except GitCommandError as e:
-                self.log(f"Pull 실패: {e}", "error")
+                self._handle_git_error("Pull 실패", e)
             self._ui(self.refresh_status)
 
         self._run_in_thread(task)
@@ -754,7 +883,7 @@ class App(ctk.CTk):
             except GitConflictError as e:
                 self._report_conflict(e)
             except GitCommandError as e:
-                self.log(f"Push 실패: {e}", "error")
+                self._handle_git_error("Push 실패", e)
             self._ui(self.refresh_status)
 
         self._run_in_thread(task)
@@ -769,7 +898,7 @@ class App(ctk.CTk):
                 self.git.stash_save("manual stash")
                 self.log("변경사항을 stash에 저장했습니다.", "success")
             except GitCommandError as e:
-                self.log(f"Stash 저장 실패: {e}", "error")
+                self._handle_git_error("Stash 저장 실패", e)
             self._ui(self.refresh_status)
 
         self._run_in_thread(task)
@@ -784,7 +913,7 @@ class App(ctk.CTk):
                 if conflicts:
                     self._report_conflict(GitConflictError(conflicts, "stash 복원"))
                 else:
-                    self.log(f"Stash 복원 실패: {e}", "error")
+                    self._handle_git_error("Stash 복원 실패", e)
             self._ui(self.refresh_status)
 
         self._run_in_thread(task)
@@ -799,7 +928,7 @@ class App(ctk.CTk):
             except GitConflictError as e:
                 self._report_conflict(e)
             except GitCommandError as e:
-                self.log(f"Sync 실패: {e}", "error")
+                self._handle_git_error("Sync 실패", e)
             self._ui(self.refresh_status)
 
         self._run_in_thread(task)
@@ -807,12 +936,16 @@ class App(ctk.CTk):
     def _report_conflict(self, err: GitConflictError):
         file_list = "\n".join(f"- {f}" for f in err.files)
         self.log(f"{err.stage} 중 충돌 발생! 아래 파일을 직접 확인 후 해결하세요.", "error")
-        self._ui(lambda: messagebox.showwarning(
-            "충돌 발생",
-            f"{err.stage} 중 다음 파일에서 충돌이 발생했습니다:\n\n{file_list}\n\n"
-            "파일을 열어 <<<<<<< / ======= / >>>>>>> 표시를 직접 정리한 뒤\n"
-            "다시 스테이징하고 커밋해주세요.",
-        ))
+        raw_text = f"{err.stage} 중 다음 파일에서 충돌이 발생했습니다:\n\n{file_list}"
+        diagnosis = (
+            "병합 충돌 (Conflict)",
+            "같은 부분을 서로 다르게 고쳐서 Git이 자동으로 합치지 못했습니다.\n\n"
+            "해결 방법:\n"
+            "1) 위에 나열된 파일들을 하나씩 열어보세요.\n"
+            "2) 파일 안의 <<<<<<< / ======= / >>>>>>> 표시 사이 내용을 직접 정리하세요.\n"
+            "3) 정리가 끝나면 해당 파일을 다시 Add하고 커밋하세요.",
+        )
+        self._ui(lambda: self.show_error_helper(f"{err.stage} 중 충돌 발생", raw_text, diagnosis))
 
     # ---------- thread / busy helpers ----------
     def _run_in_thread(self, task):
