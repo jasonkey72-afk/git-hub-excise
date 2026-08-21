@@ -1,4 +1,5 @@
 import json
+import os
 import queue
 import shlex
 import subprocess
@@ -9,7 +10,11 @@ import customtkinter as ctk
 from tkinter import filedialog, messagebox
 from git import Repo, GitCommandError, InvalidGitRepositoryError, NoSuchPathError
 
-CONFIG_PATH = Path(__file__).with_name("_gitCommand_config.json")
+# PyInstaller onefile 빌드는 __file__이 실행할 때마다 새로 생성되는 임시 폴더를 가리켜서
+# 그 옆에 저장하면 종료 즉시 사라진다. 사용자별 고정 폴더(APPDATA)에 저장해야 실행할 때마다 유지된다.
+CONFIG_DIR = Path(os.environ.get("APPDATA", Path.home())) / "GitEasy"
+CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+CONFIG_PATH = CONFIG_DIR / "config.json"
 
 
 class ToolTip:
@@ -94,7 +99,21 @@ class GitService:
             return "(detached HEAD)"
 
     def branches(self):
-        return [h.name for h in self.repo.heads]
+        """(브랜치명, 로컬여부) 목록. 원격에만 있는 브랜치도 함께 보여준다."""
+        local = [h.name for h in self.repo.heads]
+        seen = set(local)
+        remote_only = []
+        try:
+            refs = self.repo.remotes.origin.refs
+        except (AttributeError, IndexError):
+            refs = []
+        for ref in refs:
+            name = ref.name.split("/", 1)[-1]
+            if name == "HEAD" or name in seen:
+                continue
+            seen.add(name)
+            remote_only.append(name)
+        return [(n, True) for n in local] + [(n, False) for n in sorted(remote_only)]
 
     def checkout(self, branch_name):
         self.repo.git.checkout(branch_name)
@@ -225,8 +244,8 @@ GIT_GLOSSARY = [
         ("git log", "지금까지의 커밋(작업 기록)을 시간순으로 보여줍니다."),
     ]),
     ("변경사항 저장하기", [
-        ("git add <파일>", "특정 파일을 다음 커밋에 포함되도록 등록(스테이징)합니다. UI의 '선택 스테이징'과 같은 동작입니다."),
-        ("git add .", "바뀐 파일을 전부 한 번에 등록합니다. UI의 '전체 스테이징'과 같은 동작입니다."),
+        ("git add <파일>", "특정 파일을 다음 커밋에 포함되도록 등록(스테이징)합니다. UI의 '선택 Add'와 같은 동작입니다."),
+        ("git add .", "바뀐 파일을 전부 한 번에 등록합니다. UI의 '전체 Add'와 같은 동작입니다."),
         ("git restore --staged <파일>", "스테이징을 취소합니다. UI의 '선택 취소'와 같은 동작입니다."),
         ("git commit -m \"메시지\"", "스테이징된 변경사항을 저장소 기록에 하나의 커밋으로 남깁니다. UI의 '커밋' 버튼과 같은 동작입니다."),
     ]),
@@ -262,6 +281,7 @@ class App(ctk.CTk):
         self.log_queue = queue.Queue()
         self.busy = False
         self.action_buttons = []
+        self._branch_display_map = {}
 
         self._build_layout()
         self.after(100, self._poll_log_queue)
@@ -292,8 +312,9 @@ class App(ctk.CTk):
         add_tooltip(clone_btn, "GitHub 등 원격 저장소의 URL을 입력하면\n저장소 전체를 내 컴퓨터로 처음 복사해옵니다. (git clone과 동일)")
 
         help_btn = ctk.CTkButton(
-            top, text="📖 Git 명령어 설명서", width=150,
-            fg_color="transparent", border_width=1, command=self.on_show_git_help,
+            top, text="📖 Git 명령어 설명서", width=170,
+            fg_color="#6d28d9", hover_color="#5b21b6", text_color="#FFFFFF",
+            command=self.on_show_git_help,
         )
         help_btn.grid(row=0, column=4, padx=(5, 10))
         add_tooltip(help_btn, "자주 쓰는 Git 명령어들을 초보자 눈높이로 설명하는 창을 엽니다.")
@@ -330,11 +351,11 @@ class App(ctk.CTk):
         stage_btns = ctk.CTkFrame(files_frame, fg_color="transparent")
         stage_btns.grid(row=2, column=0, sticky="ew", padx=10)
         self._action_button(
-            stage_btns, "선택 스테이징 →", self.on_stage_selected,
+            stage_btns, "선택 Add →", self.on_stage_selected,
             tooltip="체크한 파일만 다음 커밋 대상으로 등록합니다. (git add <파일>과 동일)",
         ).pack(side="left")
         self._action_button(
-            stage_btns, "전체 스테이징", self.on_stage_all,
+            stage_btns, "전체 Add", self.on_stage_all,
             tooltip="변경된 모든 파일을 한 번에 커밋 대상으로 등록합니다. (git add . 와 동일)",
         ).pack(side="left", padx=5)
 
@@ -466,6 +487,18 @@ class App(ctk.CTk):
         self._save_last_path(self.git.path)
         self.log(f"저장소 열림: {self.git.path}", "success")
         self.refresh_status()
+        self._fetch_then_refresh()
+
+    def _fetch_then_refresh(self):
+        def task():
+            try:
+                self.git.fetch()
+                self.log("원격 브랜치 목록을 최신화했습니다.", "info")
+            except GitCommandError as e:
+                self.log(f"원격 정보 갱신 실패 (오프라인이거나 접근 권한 문제일 수 있음): {e}", "warning")
+            self._ui(self.refresh_status)
+
+        self._run_in_thread(task)
 
     def on_clone(self):
         dialog = ctk.CTkInputDialog(text="복제할 저장소 URL을 입력하세요:", title="Git Clone")
@@ -599,8 +632,14 @@ class App(ctk.CTk):
         if not self.git.repo:
             return
 
-        branches = self.git.branches()
-        self.branch_menu.configure(values=branches or ["-"])
+        branch_info = self.git.branches()
+        self._branch_display_map = {}
+        display_values = []
+        for name, is_local in branch_info:
+            label = name if is_local else f"{name} (원격 전용)"
+            display_values.append(label)
+            self._branch_display_map[label] = name
+        self.branch_menu.configure(values=display_values or ["-"])
         self.branch_menu.set(self.git.current_branch())
 
         ahead, behind = self.git.ahead_behind()
@@ -632,7 +671,8 @@ class App(ctk.CTk):
         return [path for path, var in var_map.items() if var.get()]
 
     # ---------- button handlers ----------
-    def on_branch_selected(self, branch_name):
+    def on_branch_selected(self, label):
+        branch_name = self._branch_display_map.get(label, label)
         if branch_name == self.git.current_branch():
             return
         if self.git.is_dirty() and not messagebox.askyesno(
