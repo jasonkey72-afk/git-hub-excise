@@ -1,0 +1,1038 @@
+<title>GitEasy 매뉴얼</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  /* ===================== tokens ===================== */
+  :root{
+    --ink:#0e1116;
+    --surface:#161b22;
+    --surface-2:#1c2330;
+    --surface-3:#232b3a;
+    --line:#2a3140;
+    --line-soft:#1d232f;
+    --text:#e6edf3;
+    --text-dim:#9aa5b8;
+    --text-faint:#5c667a;
+
+    --c-add:#3fb950;      /* success / add / commit / push */
+    --c-add-dim:#1b3a22;
+    --c-pull:#58a6ff;     /* info / pull / fetch */
+    --c-pull-dim:#152a45;
+    --c-warn:#d29922;     /* caution / stash / destructive */
+    --c-warn-dim:#3a2c0d;
+    --c-error:#f85149;    /* error / conflict */
+    --c-error-dim:#3d1614;
+    --c-smart:#bc8cff;    /* smart automation / sync */
+    --c-smart-dim:#2a1f42;
+
+    --font-body:"IBM Plex Sans KR","Noto Sans KR",system-ui,sans-serif;
+    --font-mono:"IBM Plex Mono","D2Coding",Consolas,monospace;
+
+    --wrap:1120px;
+    --radius:14px;
+  }
+
+  *,*::before,*::after{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.7;
+    font-size:16px;
+    -webkit-font-smoothing:antialiased;
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(88,166,255,0.08), transparent 40%),
+      radial-gradient(circle at 88% 30%, rgba(188,140,255,0.06), transparent 45%);
+    background-attachment:fixed;
+  }
+  h1,h2,h3,h4{font-weight:700;text-wrap:balance;margin:0;}
+  p{margin:0;}
+  a{color:inherit;}
+  ::selection{background:var(--c-pull-dim);color:var(--text);}
+  :focus-visible{outline:2px solid var(--c-pull);outline-offset:3px;border-radius:4px;}
+
+  code,.mono{font-family:var(--font-mono);}
+
+  img,svg{max-width:100%;display:block;}
+
+  .wrap{max-width:var(--wrap);margin:0 auto;padding:0 28px;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important;animation-iteration-count:1 !important;transition-duration:0.001ms !important;scroll-behavior:auto !important;}
+  }
+
+  /* ===================== faint terminal grid backdrop ===================== */
+  .grid-bg{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
+    background-size:42px 42px;
+    mask-image:radial-gradient(ellipse 80% 60% at 50% 0%, #000 10%, transparent 75%);
+  }
+
+  /* ===================== hero ===================== */
+  .hero{position:relative;padding:96px 0 88px;overflow:hidden;}
+  .hero-inner{position:relative;z-index:2;max-width:760px;}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    font-family:var(--font-mono);font-size:13px;letter-spacing:0.04em;
+    color:var(--text-dim);
+    background:var(--surface);border:1px solid var(--line);
+    padding:6px 14px 6px 10px;border-radius:999px;
+    margin-bottom:28px;
+  }
+  .eyebrow .dot{width:8px;height:8px;border-radius:50%;background:var(--c-add);box-shadow:0 0 0 3px var(--c-add-dim);}
+  .hero h1{
+    font-size:clamp(34px,5vw,54px);
+    line-height:1.22;
+    letter-spacing:-0.01em;
+  }
+  .hero h1 .accent{color:var(--c-pull);}
+  .hero p.lede{
+    margin-top:22px;font-size:18px;color:var(--text-dim);max-width:560px;
+  }
+  .hero-actions{display:flex;gap:12px;margin-top:36px;flex-wrap:wrap;}
+  .btn{
+    font-family:var(--font-body);font-weight:600;font-size:14.5px;
+    padding:12px 22px;border-radius:10px;border:1px solid transparent;
+    cursor:pointer;display:inline-flex;align-items:center;gap:8px;
+    transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn-primary{background:var(--c-pull);color:#06121f;}
+  .btn-primary:hover{box-shadow:0 8px 24px -8px rgba(88,166,255,0.55);}
+  .btn-ghost{background:var(--surface);border-color:var(--line);color:var(--text);}
+  .btn-ghost:hover{background:var(--surface-2);}
+
+  .hero-canvas-wrap{
+    position:absolute;inset:0;z-index:1;
+  }
+  #heroCanvas{position:absolute;inset:0;width:100%;height:100%;opacity:0.9;}
+
+  /* ===================== git-log style section header ===================== */
+  .section{position:relative;padding:64px 0;scroll-margin-top:24px;}
+  .section + .section{border-top:1px solid var(--line-soft);}
+
+  .commit-line{
+    display:flex;align-items:baseline;gap:12px;margin-bottom:10px;
+    font-family:var(--font-mono);font-size:13px;color:var(--text-faint);
+    flex-wrap:wrap;
+  }
+  .commit-dot{
+    width:11px;height:11px;border-radius:50%;flex:none;
+    transform:scale(0.4);opacity:0;
+    transition:transform .5s cubic-bezier(.2,.8,.2,1), opacity .5s ease, box-shadow .5s ease;
+  }
+  .in-view .commit-dot{transform:scale(1);opacity:1;box-shadow:0 0 0 5px var(--dot-dim,transparent);}
+  .commit-hash{color:var(--text-faint);}
+  .commit-tag{
+    font-weight:600;
+  }
+  .commit-tag.feat{color:var(--c-add);}
+  .commit-tag.docs{color:var(--c-pull);}
+  .commit-tag.fix{color:var(--c-error);}
+
+  .section h2{font-size:clamp(24px,3.4vw,32px);margin-bottom:18px;letter-spacing:-0.01em;}
+  .section .kicker{font-size:16.5px;color:var(--text-dim);max-width:640px;margin-bottom:36px;}
+
+  /* spine */
+  .spine-track{
+    position:absolute;left:5px;top:0;bottom:0;width:2px;
+    background:var(--line);
+  }
+  .spine-fill{
+    position:absolute;left:5px;top:0;width:2px;height:0%;
+    background:linear-gradient(var(--c-pull), var(--c-smart));
+    transition:height .1s linear;
+  }
+  .spine-wrap{position:relative;padding-left:32px;}
+  @media (max-width:720px){
+    .spine-wrap{padding-left:22px;}
+    .spine-track,.spine-fill{left:3px;}
+  }
+
+  /* ===================== cards / grid ===================== */
+  .card-grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));}
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px;transition:border-color .2s ease, transform .2s ease, background .2s ease;
+  }
+  .card:hover{border-color:var(--card-accent,var(--line));transform:translateY(-2px);}
+  .card .icon-badge{
+    width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    font-size:18px;margin-bottom:14px;
+    background:var(--badge-bg);color:var(--badge-fg);
+  }
+  .card h3{font-size:16.5px;margin-bottom:8px;}
+  .card p{color:var(--text-dim);font-size:14.5px;}
+
+  .lede-block{color:var(--text-dim);font-size:15.5px;max-width:680px;}
+  .lede-block + .lede-block{margin-top:14px;}
+  .lede-block strong{color:var(--text);}
+
+  /* analogy panel */
+  .analogy{
+    display:grid;grid-template-columns:1fr 1fr;gap:0;
+    border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-top:28px;
+  }
+  .analogy > div{padding:24px 26px;}
+  .analogy .old{background:var(--surface);}
+  .analogy .new{background:var(--surface-2);border-left:1px solid var(--line);}
+  .analogy .label{font-family:var(--font-mono);font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--text-faint);margin-bottom:10px;}
+  .analogy .old .label{color:var(--c-warn);}
+  .analogy .new .label{color:var(--c-add);}
+  .analogy ul{margin:0;padding-left:18px;color:var(--text-dim);font-size:14.5px;}
+  .analogy li + li{margin-top:6px;}
+  @media (max-width:640px){.analogy{grid-template-columns:1fr;}.analogy .new{border-left:none;border-top:1px solid var(--line);}}
+
+  /* ===================== app mockup (UI tour) ===================== */
+  .tour{display:grid;grid-template-columns:220px 1fr;gap:24px;align-items:start;}
+  @media (max-width:820px){.tour{grid-template-columns:1fr;}}
+
+  .tour-nav{display:flex;flex-direction:column;gap:6px;position:sticky;top:20px;}
+  .tour-nav button{
+    text-align:left;background:transparent;border:1px solid transparent;color:var(--text-dim);
+    font-family:var(--font-body);font-size:14px;padding:10px 12px;border-radius:8px;cursor:pointer;
+    display:flex;align-items:center;gap:10px;transition:background .15s ease,color .15s ease;
+  }
+  .tour-nav button .n{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);width:16px;}
+  .tour-nav button:hover{background:var(--surface);color:var(--text);}
+  .tour-nav button.active{background:var(--surface-2);color:var(--text);border-color:var(--line);}
+  .tour-nav button.active .n{color:var(--c-pull);}
+
+  .app-window{
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;
+    box-shadow:0 24px 60px -30px rgba(0,0,0,0.7);
+  }
+  .app-titlebar{
+    display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--surface-2);
+    border-bottom:1px solid var(--line);
+  }
+  .app-titlebar .dots{display:flex;gap:6px;}
+  .app-titlebar .dots span{width:9px;height:9px;border-radius:50%;background:var(--line);}
+  .app-titlebar .name{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);margin-left:6px;}
+
+  .app-body{padding:16px;display:flex;flex-direction:column;gap:12px;}
+
+  .zone{
+    border:1px solid var(--line);border-radius:9px;padding:12px 14px;background:var(--surface-3);
+    transition:box-shadow .25s ease, border-color .25s ease, background .25s ease;
+    position:relative;
+  }
+  .zone .zone-label{font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint);letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px;}
+  .zone.highlight{
+    border-color:var(--zone-accent,var(--c-pull));
+    box-shadow:0 0 0 1px var(--zone-accent,var(--c-pull)), 0 0 26px -6px var(--zone-accent,var(--c-pull));
+    background:var(--surface-2);
+  }
+  .fake-btn{
+    display:inline-flex;align-items:center;font-family:var(--font-mono);font-size:11.5px;
+    padding:5px 10px;border-radius:6px;border:1px solid var(--line);color:var(--text-dim);background:var(--surface);
+  }
+  .fake-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .fake-chip{
+    font-family:var(--font-mono);font-size:11px;color:var(--text-faint);
+    border:1px dashed var(--line);border-radius:6px;padding:4px 8px;
+  }
+  .fake-file{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);}
+  .fake-file .box{width:13px;height:13px;border:1px solid var(--line);border-radius:3px;flex:none;}
+  .fake-two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media (max-width:520px){.fake-two-col{grid-template-columns:1fr;}}
+
+  .tour-desc{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;}
+  .tour-desc h4{font-size:15px;margin-bottom:6px;color:var(--c-pull);}
+  .tour-desc p{font-size:14px;color:var(--text-dim);}
+  .tour-desc .chips{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;}
+  .tour-desc .chip{font-family:var(--font-mono);font-size:11.5px;background:var(--surface-2);border:1px solid var(--line);padding:4px 9px;border-radius:6px;color:var(--text);}
+
+  /* ===================== stepper ===================== */
+  .stepper{display:flex;gap:0;margin-bottom:28px;overflow-x:auto;padding-bottom:4px;}
+  .step-btn{
+    flex:1;min-width:120px;background:transparent;border:none;border-bottom:3px solid var(--line);
+    color:var(--text-faint);font-family:var(--font-mono);font-size:12.5px;text-align:left;
+    padding:12px 14px;cursor:pointer;transition:border-color .2s ease,color .2s ease;
+  }
+  .step-btn .num{display:block;font-size:11px;color:var(--text-faint);margin-bottom:4px;}
+  .step-btn .lbl{display:block;font-family:var(--font-body);font-size:14px;color:var(--text-dim);font-weight:600;}
+  .step-btn.active{border-color:var(--c-add);color:var(--c-add);}
+  .step-btn.active .lbl{color:var(--text);}
+  .step-btn.done{border-color:var(--c-add);}
+
+  .step-panel{display:none;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:26px 28px;}
+  .step-panel.active{display:block;animation:fadeUp .35s ease;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .step-panel h4{font-size:17px;margin-bottom:10px;}
+  .step-panel p{color:var(--text-dim);font-size:14.5px;margin-bottom:14px;}
+  .step-panel .do{
+    display:inline-flex;align-items:center;gap:8px;background:var(--surface-2);
+    border:1px solid var(--line);border-radius:8px;padding:8px 14px;font-family:var(--font-mono);font-size:13px;
+    color:var(--c-add);
+  }
+
+  /* ===================== code chip w/ copy ===================== */
+  .code-row{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:var(--ink);border:1px solid var(--line);border-radius:8px;
+    padding:9px 10px 9px 14px;font-family:var(--font-mono);font-size:13px;margin-top:8px;
+  }
+  .code-row code{color:var(--c-add);}
+  .copy-btn{
+    font-family:var(--font-body);font-size:12px;background:var(--surface-2);border:1px solid var(--line);
+    color:var(--text-dim);padding:5px 10px;border-radius:6px;cursor:pointer;flex:none;
+    transition:background .15s ease,color .15s ease;
+  }
+  .copy-btn:hover{background:var(--surface-3);color:var(--text);}
+  .copy-btn.copied{color:var(--c-add);border-color:var(--c-add);}
+
+  /* ===================== accordion ===================== */
+  .accordion-item{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface);}
+  .accordion-item + .accordion-item{margin-top:10px;}
+  .accordion-item summary{
+    list-style:none;cursor:pointer;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;
+    font-weight:600;font-size:15px;gap:16px;
+  }
+  .accordion-item summary::-webkit-details-marker{display:none;}
+  .accordion-item summary .plus{font-family:var(--font-mono);color:var(--text-faint);transition:transform .2s ease;flex:none;}
+  .accordion-item[open] summary .plus{transform:rotate(45deg);color:var(--c-pull);}
+  .accordion-body{padding:0 18px 18px;color:var(--text-dim);font-size:14.5px;}
+  .accordion-body code{background:var(--ink);border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--c-add);font-size:13px;}
+
+  /* glossary table */
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;}
+  table{border-collapse:collapse;width:100%;min-width:640px;font-size:14.5px;}
+  thead th{
+    text-align:left;font-family:var(--font-mono);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;
+    color:var(--text-faint);background:var(--surface-2);padding:12px 16px;border-bottom:1px solid var(--line);
+  }
+  tbody td{padding:13px 16px;border-bottom:1px solid var(--line-soft);color:var(--text-dim);vertical-align:top;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody td:first-child{font-family:var(--font-mono);color:var(--text);white-space:nowrap;}
+  tbody tr:hover{background:var(--surface);}
+
+  /* faq reuses accordion */
+
+  /* ===================== footer ===================== */
+  footer{padding:70px 0 60px;text-align:center;position:relative;}
+  footer .mark{font-family:var(--font-mono);font-size:13px;color:var(--text-faint);}
+  footer h3{font-size:22px;margin-bottom:12px;}
+  footer p{color:var(--text-dim);font-size:14.5px;max-width:480px;margin:0 auto 26px;}
+  .copyright{
+    margin-top:40px;padding-top:22px;border-top:1px solid var(--line-soft);
+    font-family:var(--font-mono);font-size:12px;color:var(--text-faint);
+    display:flex;justify-content:center;gap:8px;flex-wrap:wrap;
+  }
+  .copyright .sep{color:var(--line);}
+
+  /* ===================== toc fab ===================== */
+  .toc-fab{
+    position:fixed;right:22px;bottom:22px;z-index:40;
+    background:var(--c-pull);color:#06121f;border:none;border-radius:999px;
+    width:52px;height:52px;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;box-shadow:0 12px 28px -10px rgba(88,166,255,0.6);
+    font-family:var(--font-mono);font-size:18px;font-weight:700;
+    transition:transform .2s ease;
+  }
+  .toc-fab:hover{transform:scale(1.06);}
+  .toc-panel{
+    position:fixed;right:22px;bottom:86px;z-index:40;width:260px;max-height:60vh;overflow:auto;
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;
+    box-shadow:0 24px 50px -20px rgba(0,0,0,0.7);
+    display:none;
+  }
+  .toc-panel.open{display:block;animation:fadeUp .2s ease;}
+  .toc-panel a{
+    display:flex;gap:8px;align-items:baseline;padding:9px 10px;border-radius:7px;font-size:13.5px;color:var(--text-dim);text-decoration:none;
+  }
+  .toc-panel a:hover{background:var(--surface-2);color:var(--text);}
+  .toc-panel a .dot{width:7px;height:7px;border-radius:50%;flex:none;}
+
+  /* reveal-on-scroll generic */
+  .reveal{opacity:0;transform:translateY(14px);transition:opacity .6s ease, transform .6s ease;}
+  .reveal.in-view{opacity:1;transform:translateY(0);}
+
+  @media (max-width:520px){
+    .wrap{padding:0 18px;}
+    .hero{padding:70px 0 60px;}
+  }
+</style>
+
+<div class="grid-bg"></div>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <div class="hero-canvas-wrap"><canvas id="heroCanvas"></canvas></div>
+  <div class="wrap hero-inner">
+    <div class="eyebrow"><span class="dot"></span> 사내 교육자료 · GitEasy v1</div>
+    <h1>명령어 없이도,<br><span class="accent">Git</span>을 씁니다.</h1>
+    <p class="lede">
+      GitEasy는 검은 화면에 하얀 글씨로 명령어를 치는 대신, 버튼 몇 개로 GitHub와 대화하게 해주는 사내용 프로그램입니다.
+      이 매뉴얼 하나면 Git을 한 번도 써본 적 없어도 오늘부터 바로 시작할 수 있습니다.
+    </p>
+    <div class="hero-actions">
+      <a href="#start" class="btn btn-primary">5단계로 바로 시작하기 →</a>
+      <a href="#tour" class="btn btn-ghost">화면부터 둘러보기</a>
+    </div>
+  </div>
+</section>
+
+<main class="wrap spine-wrap">
+  <div class="spine-track"></div>
+  <div class="spine-fill" id="spineFill"></div>
+
+  <!-- ================= WHY ================= -->
+  <section class="section" id="why" data-node data-color="pull">
+    <div class="commit-line in-view-target">
+      <span class="commit-dot" style="background:var(--c-pull);--dot-dim:var(--c-pull-dim)"></span>
+      <span class="commit-hash">1a2f6d</span>
+      <span class="commit-tag docs">docs:</span>
+      <span>왜 GitEasy가 필요한가</span>
+    </div>
+    <h2 class="reveal">"pull이 뭔데 안 되는 거예요?"</h2>
+    <p class="kicker reveal">
+      Git은 원래 개발자를 위해 만들어진 도구입니다. 그래서 검은 콘솔창, 영어 오류 메시지, 외워야 하는 명령어가 기본값이죠.
+      기획·마케팅·운영 등 코드를 매일 다루지 않는 분들에게는 이 장벽 자체가 협업을 가로막는 벽이 됩니다.
+    </p>
+
+    <div class="analogy reveal">
+      <div class="old">
+        <div class="label">기존 방식 — Git Bash</div>
+        <ul>
+          <li><code class="mono">git pull origin main</code> — 정확한 철자와 순서를 외워야 함</li>
+          <li>영어로 된 오류 메시지 앞에서 멈춰버림</li>
+          <li>"브랜치"가 뭔지, 내가 지금 뭘 누른 건지 알 수 없음</li>
+          <li>잘못 누르면 되돌릴 수 있는지조차 불안함</li>
+        </ul>
+      </div>
+      <div class="new">
+        <div class="label">GitEasy 방식</div>
+        <ul>
+          <li>버튼에 이미 한글 이름이 적혀 있음 — <span class="mono">Pull (스마트)</span></li>
+          <li>오류가 나면 원인과 해결법을 바로 보여주는 팝업</li>
+          <li>버튼에 마우스를 올리면 무슨 뜻인지 말풍선으로 설명</li>
+          <li>위험한 작업은 실행 전 한 번 더 확인 후 진행</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CONCEPT ================= -->
+  <section class="section" id="concept" data-node data-color="pull">
+    <div class="commit-line">
+      <span class="commit-dot" style="background:var(--c-pull);--dot-dim:var(--c-pull-dim)"></span>
+      <span class="commit-hash">7c3b91</span>
+      <span class="commit-tag docs">docs:</span>
+      <span>Git이 뭔가요</span>
+    </div>
+    <h2 class="reveal">한 줄로 설명하면, "무한 되돌리기 저장소"</h2>
+    <p class="kicker reveal">
+      한글 문서를 <strong style="color:var(--text)">"최종", "최종_진짜", "최종_진짜진짜"</strong>로 저장해본 적 있다면, 이미 Git이 하는 일의 절반은 이해하신 겁니다.
+    </p>
+
+    <div class="card-grid reveal">
+      <div class="card" style="--card-accent:var(--c-pull)">
+        <div class="icon-badge" style="--badge-bg:var(--c-pull-dim);--badge-fg:var(--c-pull)">①</div>
+        <h3>Git</h3>
+        <p>파일이 바뀔 때마다 "이 시점"을 스냅샷처럼 저장해두는 기록 시스템. 언제든 예전 버전으로 되돌아갈 수 있습니다.</p>
+      </div>
+      <div class="card" style="--card-accent:var(--c-smart)">
+        <div class="icon-badge" style="--badge-bg:var(--c-smart-dim);--badge-fg:var(--c-smart)">②</div>
+        <h3>커밋(Commit)</h3>
+        <p>"여기까지 작업한 내용을 하나로 묶어서 저장"하는 행위. 저장할 때마다 짧은 메모(커밋 메시지)를 남깁니다.</p>
+      </div>
+      <div class="card" style="--card-accent:var(--c-add)">
+        <div class="icon-badge" style="--badge-bg:var(--c-add-dim);--badge-fg:var(--c-add)">③</div>
+        <h3>GitHub</h3>
+        <p>그 기록들을 인터넷 서버에 올려서, 팀원 누구나 최신 버전을 받아보고 함께 작업할 수 있게 하는 창고입니다.</p>
+      </div>
+      <div class="card" style="--card-accent:var(--c-warn)">
+        <div class="icon-badge" style="--badge-bg:var(--c-warn-dim);--badge-fg:var(--c-warn)">④</div>
+        <h3>브랜치(Branch)</h3>
+        <p>원본은 그대로 두고, 별도의 작업 공간을 하나 더 만드는 것. 실험하다 실패해도 원본은 안전합니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= INTRO ================= -->
+  <section class="section" id="intro" data-node data-color="add">
+    <div class="commit-line">
+      <span class="commit-dot" style="background:var(--c-add);--dot-dim:var(--c-add-dim)"></span>
+      <span class="commit-hash">e04a58</span>
+      <span class="commit-tag feat">feat:</span>
+      <span>GitEasy 소개</span>
+    </div>
+    <h2 class="reveal">Git 명령어를, 누르는 것으로 바꿨습니다</h2>
+    <p class="kicker reveal">GitEasy는 4가지 원칙으로 만들어졌습니다.</p>
+
+    <div class="card-grid reveal">
+      <div class="card" style="--card-accent:var(--c-pull)">
+        <div class="icon-badge" style="--badge-bg:var(--c-pull-dim);--badge-fg:var(--c-pull)">🖱️</div>
+        <h3>전부 버튼으로</h3>
+        <p>저장·업로드·내려받기 등 실제 업무에 필요한 모든 동작을 한글 버튼으로 제공합니다.</p>
+      </div>
+      <div class="card" style="--card-accent:var(--c-smart)">
+        <div class="icon-badge" style="--badge-bg:var(--c-smart-dim);--badge-fg:var(--c-smart)">⚡</div>
+        <h3>알아서 처리</h3>
+        <p>"이럴 땐 이렇게"가 필요한 상황(충돌 위험, 업로드 거부 등)을 자동으로 감지해 안전하게 처리합니다.</p>
+      </div>
+      <div class="card" style="--card-accent:var(--c-warn)">
+        <div class="icon-badge" style="--badge-bg:var(--c-warn-dim);--badge-fg:var(--c-warn)">💬</div>
+        <h3>마우스만 올려도 설명</h3>
+        <p>모든 버튼에 말풍선 설명이 붙어있고, Git 명령어 사전도 클릭 한 번으로 열립니다.</p>
+      </div>
+      <div class="card" style="--card-accent:var(--c-error)">
+        <div class="icon-badge" style="--badge-bg:var(--c-error-dim);--badge-fg:var(--c-error)">🩺</div>
+        <h3>오류가 나도 당황 없이</h3>
+        <p>오류가 발생하면 원문 복사 + 원인 진단 + 해결법을 한 화면에서 바로 보여줍니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TOUR ================= -->
+  <section class="section" id="tour" data-node data-color="pull">
+    <div class="commit-line">
+      <span class="commit-dot" style="background:var(--c-pull);--dot-dim:var(--c-pull-dim)"></span>
+      <span class="commit-hash">9f61d2</span>
+      <span class="commit-tag feat">feat:</span>
+      <span>화면 둘러보기</span>
+    </div>
+    <h2 class="reveal">실제 화면 구조는 이렇습니다</h2>
+    <p class="kicker reveal">왼쪽 메뉴를 눌러보세요. 해당 영역이 오른쪽 화면에서 강조됩니다.</p>
+
+    <div class="tour reveal">
+      <div class="tour-nav" role="tablist" aria-label="화면 영역 선택">
+        <button class="active" data-target="zone-top" data-accent="pull"><span class="n">01</span> 상단 바</button>
+        <button data-target="zone-branch" data-accent="smart"><span class="n">02</span> 브랜치 표시줄</button>
+        <button data-target="zone-files" data-accent="add"><span class="n">03</span> 파일 · Add</button>
+        <button data-target="zone-log" data-accent="warn"><span class="n">04</span> 로그 · 콘솔</button>
+        <button data-target="zone-actions" data-accent="error"><span class="n">05</span> 실행 버튼</button>
+      </div>
+
+      <div>
+        <div class="app-window">
+          <div class="app-titlebar">
+            <div class="dots"><span></span><span></span><span></span></div>
+            <div class="name">GitEasy — Git 쉽게 쓰기</div>
+          </div>
+          <div class="app-body">
+            <div class="zone" id="zone-top" style="--zone-accent:var(--c-pull)">
+              <div class="zone-label">저장소</div>
+              <div class="fake-row">
+                <span class="fake-chip">(열린 저장소 없음)</span>
+                <span class="fake-btn">폴더 열기</span>
+                <span class="fake-btn">복제(Clone)</span>
+                <span class="fake-btn" style="color:#fff;background:#6d28d9;border-color:#6d28d9;">📖 Git 명령어 설명서</span>
+              </div>
+            </div>
+            <div class="zone" id="zone-branch" style="--zone-accent:var(--c-smart)">
+              <div class="zone-label">브랜치</div>
+              <div class="fake-row">
+                <span class="fake-btn">main ▾</span>
+                <span class="fake-chip">↑ 앞섬 0　↓ 뒤처짐 0</span>
+                <span class="fake-btn" style="margin-left:auto">새로고침</span>
+              </div>
+            </div>
+            <div class="fake-two-col">
+              <div class="zone" id="zone-files" style="--zone-accent:var(--c-add)">
+                <div class="zone-label">변경된 파일</div>
+                <div class="fake-file"><span class="box"></span> [수정] gitCommand.py</div>
+                <div class="fake-file" style="margin-top:6px"><span class="box"></span> [신규] README.md</div>
+                <div class="fake-row" style="margin-top:10px">
+                  <span class="fake-btn">선택 Add →</span>
+                  <span class="fake-btn">전체 Add</span>
+                </div>
+              </div>
+              <div class="zone" id="zone-log" style="--zone-accent:var(--c-warn)">
+                <div class="zone-label">작업 로그 · 콘솔</div>
+                <div class="mono" style="font-size:11.5px;color:var(--text-faint);line-height:1.9;">
+                  ✔ 저장소 열림<br>
+                  ✔ push 완료.
+                </div>
+                <div class="fake-row" style="margin-top:8px">
+                  <span class="fake-chip" style="flex:1">status</span>
+                  <span class="fake-btn">실행</span>
+                </div>
+              </div>
+            </div>
+            <div class="zone" id="zone-actions" style="--zone-accent:var(--c-error)">
+              <div class="zone-label">실행</div>
+              <div class="fake-row">
+                <span class="fake-btn">Fetch</span>
+                <span class="fake-btn">Pull (스마트)</span>
+                <span class="fake-btn">Push (스마트)</span>
+                <span class="fake-btn">Stash 저장</span>
+                <span class="fake-btn" style="margin-left:auto;color:#fff;background:#2e7d32;border-color:#2e7d32;">🔄 Sync</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tour-desc" id="tourDesc">
+          <h4>① 상단 바</h4>
+          <p>저장소를 처음 GitHub에서 받아올 땐 <b>복제(Clone)</b>, 이미 받아둔 폴더를 다시 열 땐 <b>폴더 열기</b>를 씁니다. 마지막에 연 저장소는 자동으로 기억되어 다음 실행 때 바로 열립니다.</p>
+          <div class="chips">
+            <span class="chip">복제(Clone) = git clone</span>
+            <span class="chip">폴더 열기 = 로컬 폴더 연결</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= START ================= -->
+  <section class="section" id="start" data-node data-color="add">
+    <div class="commit-line">
+      <span class="commit-dot" style="background:var(--c-add);--dot-dim:var(--c-add-dim)"></span>
+      <span class="commit-hash">b83c07</span>
+      <span class="commit-tag feat">feat:</span>
+      <span>처음 시작하기 5단계</span>
+    </div>
+    <h2 class="reveal">첫 작업, 5단계면 끝</h2>
+    <p class="kicker reveal">아래 단계를 순서대로 눌러보세요. 실제로 작업할 때도 이 순서 그대로 따라가면 됩니다.</p>
+
+    <div class="reveal">
+      <div class="stepper" id="stepper">
+        <button class="step-btn active" data-step="1"><span class="num">STEP 1</span><span class="lbl">저장소 열기</span></button>
+        <button class="step-btn" data-step="2"><span class="num">STEP 2</span><span class="lbl">파일 수정</span></button>
+        <button class="step-btn" data-step="3"><span class="num">STEP 3</span><span class="lbl">Add</span></button>
+        <button class="step-btn" data-step="4"><span class="num">STEP 4</span><span class="lbl">Commit</span></button>
+        <button class="step-btn" data-step="5"><span class="num">STEP 5</span><span class="lbl">Push</span></button>
+      </div>
+
+      <div class="step-panel active" data-panel="1">
+        <h4>1. 저장소 열기</h4>
+        <p>처음이라면 <b>복제(Clone)</b>를 눌러 GitHub 저장소 주소(URL)를 입력하고 저장 위치를 고릅니다. 이미 받아둔 폴더가 있다면 <b>폴더 열기</b>로 선택하세요.</p>
+        <span class="do">📁 폴더 열기 / 복제(Clone)</span>
+      </div>
+      <div class="step-panel" data-panel="2">
+        <h4>2. 평소처럼 파일 수정</h4>
+        <p>엑셀, 문서, 코드 등 저장소 폴더 안의 파일을 평소 쓰던 프로그램으로 열어 수정하고 저장합니다. GitEasy는 계속 켜둔 채로 두어도 됩니다.</p>
+        <span class="do">✏️ 특별한 조작 없음</span>
+      </div>
+      <div class="step-panel" data-panel="3">
+        <h4>3. 바뀐 파일 Add 하기</h4>
+        <p>왼쪽 "변경된 파일" 목록에 방금 수정한 파일이 자동으로 나타납니다. 체크 후 <b>선택 Add →</b>, 전부 다 올릴 거면 <b>전체 Add</b>를 누릅니다.</p>
+        <span class="do">☑️ 선택 Add → / 전체 Add</span>
+      </div>
+      <div class="step-panel" data-panel="4">
+        <h4>4. 메시지를 남기고 Commit</h4>
+        <p>하단 입력창에 "무엇을 바꿨는지" 한 줄로 적습니다. 예: <i>"3분기 실적표 수정"</i>. 그다음 <b>커밋</b>을 누르면 이 시점이 기록으로 남습니다.</p>
+        <span class="do">📝 커밋</span>
+      </div>
+      <div class="step-panel" data-panel="5">
+        <h4>5. GitHub로 Push</h4>
+        <p><b>Push (스마트)</b>를 누르면 내 기록이 GitHub에 올라갑니다. 팀원의 작업이 먼저 올라가 있어도 자동으로 받아온 뒤 다시 시도하니 걱정 없습니다.</p>
+        <span class="do">🚀 Push (스마트)</span>
+      </div>
+
+      <div style="margin-top:22px;padding:18px 20px;border-radius:10px;background:var(--c-smart-dim);border:1px solid rgba(188,140,255,0.35);">
+        <p style="color:var(--text);font-size:14.5px;"><b style="color:var(--c-smart)">💡 더 빠른 방법</b> — 3~5단계가 귀찮다면, 메시지만 입력창에 써두고 <b>🔄 Sync</b> 버튼 하나만 누르세요. Pull → Add → Commit → Push가 순서대로 자동 실행됩니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SMART ================= -->
+  <section class="section" id="smart" data-node data-color="smart">
+    <div class="commit-line">
+      <span class="commit-dot" style="background:var(--c-smart);--dot-dim:var(--c-smart-dim)"></span>
+      <span class="commit-hash">2ad9f4</span>
+      <span class="commit-tag feat">feat:</span>
+      <span>스마트 자동화 4가지</span>
+    </div>
+    <h2 class="reveal">"이럴 땐, 이것을" — 알아서 처리되는 것들</h2>
+    <p class="kicker reveal">GitEasy가 뒤에서 자동으로 판단하고 처리해주는 4가지 상황입니다.</p>
+
+    <div class="card-grid reveal">
+      <div class="card" style="--card-accent:var(--c-pull)">
+        <div class="icon-badge" style="--badge-bg:var(--c-pull-dim);--badge-fg:var(--c-pull)">🗂️</div>
+        <h3>Pull 전 자동 보관</h3>
+        <p>저장 안 된 변경사항이 있는 채로 Pull을 누르면, 자동으로 잠깐 따로 보관(stash)해두고 최신 내용을 받은 뒤 다시 복원합니다.</p>
+      </div>
+      <div class="card" style="--card-accent:var(--c-add)">
+        <div class="icon-badge" style="--badge-bg:var(--c-add-dim);--badge-fg:var(--c-add)">🔁</div>
+        <h3>Push 거부 시 자동 재시도</h3>
+        <p>팀원이 먼저 올린 내용이 있어 Push가 거부되면, 자동으로 먼저 Pull한 뒤 다시 Push를 시도합니다.</p>
+      </div>
+      <div class="card" style="--card-accent:var(--c-error)">
+        <div class="icon-badge" style="--badge-bg:var(--c-error-dim);--badge-fg:var(--c-error)">⚠️</div>
+        <h3>충돌 감지 & 안내</h3>
+        <p>같은 부분을 서로 다르게 고쳐 충돌이 나면, 어떤 파일에서 문제가 생겼는지 콕 집어 화면에 보여줍니다.</p>
+      </div>
+      <div class="card" style="--card-accent:var(--c-smart)">
+        <div class="icon-badge" style="--badge-bg:var(--c-smart-dim);--badge-fg:var(--c-smart)">🔄</div>
+        <h3>Sync 원클릭</h3>
+        <p>Pull → Add → Commit → Push, 4단계를 순서 그대로 한 번에 실행하는 버튼입니다. 익숙해지면 이것 하나만 눌러도 됩니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ERRORS ================= -->
+  <section class="section" id="errors" data-node data-color="error">
+    <div class="commit-line">
+      <span class="commit-dot" style="background:var(--c-error);--dot-dim:var(--c-error-dim)"></span>
+      <span class="commit-hash">f156ae</span>
+      <span class="commit-tag fix">fix:</span>
+      <span>오류 발생 시 대처법</span>
+    </div>
+    <h2 class="reveal">빨간 화면이 떠도, 당황하지 마세요</h2>
+    <p class="kicker reveal">Push나 Pull 도중 문제가 생기면 <b style="color:var(--text)">오류 도우미</b> 창이 자동으로 뜹니다. 구성은 항상 동일합니다.</p>
+
+    <div class="card-grid reveal">
+      <div class="card" style="--card-accent:var(--c-error)">
+        <div class="icon-badge" style="--badge-bg:var(--c-error-dim);--badge-fg:var(--c-error)">1</div>
+        <h3>무엇이 실패했는지</h3>
+        <p>"Push 실패", "Pull 실패"처럼 어떤 작업 중 문제가 생겼는지 제목으로 바로 알려줍니다.</p>
+      </div>
+      <div class="card" style="--card-accent:var(--c-warn)">
+        <div class="icon-badge" style="--badge-bg:var(--c-warn-dim);--badge-fg:var(--c-warn)">2</div>
+        <h3>원인 진단 + 해결법</h3>
+        <p>인증 실패, 네트워크 문제, 충돌 등 자주 나는 오류를 자동으로 알아보고 해결 방법을 문장으로 안내합니다.</p>
+      </div>
+      <div class="card" style="--card-accent:var(--c-pull)">
+        <div class="icon-badge" style="--badge-bg:var(--c-pull-dim);--badge-fg:var(--c-pull)">3</div>
+        <h3>오류 원문 복사</h3>
+        <p>📋 버튼 한 번이면 오류 메시지 전체가 복사됩니다. IT 담당자에게 그대로 붙여넣어 질문할 수 있습니다.</p>
+      </div>
+    </div>
+
+    <div class="reveal" style="margin-top:24px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;">
+      <p style="font-size:14px;color:var(--text-faint);margin-bottom:12px;" class="mono">자동으로 진단해주는 대표적인 상황</p>
+      <div class="table-wrap" style="border:none;">
+        <table style="min-width:520px;">
+          <thead><tr><th>상황</th><th>이렇게 안내됩니다</th></tr></thead>
+          <tbody>
+            <tr><td>로그인 안 됨</td><td>GitHub 인증 실패 — 브라우저 로그인창 또는 토큰 재발급 안내</td></tr>
+            <tr><td>남이 먼저 올림</td><td>Push 거부됨 — 대부분 자동 재시도로 해결, 그래도 안 되면 원인 안내</td></tr>
+            <tr><td>같은 부분 수정 충돌</td><td>충돌난 파일 목록과 정리 방법을 순서대로 안내</td></tr>
+            <tr><td>인터넷 문제</td><td>네트워크 연결 확인 안내</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= GLOSSARY ================= -->
+  <section class="section" id="glossary" data-node data-color="pull">
+    <div class="commit-line">
+      <span class="commit-dot" style="background:var(--c-pull);--dot-dim:var(--c-pull-dim)"></span>
+      <span class="commit-hash">6e2b80</span>
+      <span class="commit-tag docs">docs:</span>
+      <span>용어 사전 & 버튼 대응표</span>
+    </div>
+    <h2 class="reveal">버튼 하나하나, Git 명령어로는 이것</h2>
+    <p class="kicker reveal">앱 안의 <b style="color:var(--text)">📖 Git 명령어 설명서</b> 버튼에서도 언제든 같은 내용을 볼 수 있습니다.</p>
+
+    <div class="table-wrap reveal">
+      <table>
+        <thead><tr><th>GitEasy 버튼</th><th>실제 Git 명령어</th><th>하는 일</th></tr></thead>
+        <tbody>
+          <tr><td>폴더 열기</td><td>—</td><td>이미 받아둔 로컬 저장소 폴더를 연결합니다.</td></tr>
+          <tr><td>복제(Clone)</td><td>git clone</td><td>GitHub 저장소 전체를 내 컴퓨터로 처음 받아옵니다.</td></tr>
+          <tr><td>선택 Add / 전체 Add</td><td>git add</td><td>바뀐 파일을 다음 저장(커밋) 대상으로 등록합니다.</td></tr>
+          <tr><td>선택 취소</td><td>git restore --staged</td><td>Add를 취소하고 목록에서 뺍니다.</td></tr>
+          <tr><td>커밋</td><td>git commit -m "메시지"</td><td>등록된 변경사항을 기록으로 저장합니다.</td></tr>
+          <tr><td>Fetch</td><td>git fetch</td><td>원격에 새 내용이 있는지만 확인합니다(내 파일은 안 바뀜).</td></tr>
+          <tr><td>Pull (스마트)</td><td>git pull</td><td>원격의 최신 내용을 받아 내 작업에 합칩니다.</td></tr>
+          <tr><td>Push (스마트)</td><td>git push</td><td>내 기록을 GitHub에 올립니다.</td></tr>
+          <tr><td>Stash 저장 / 복원</td><td>git stash / stash pop</td><td>작업 중이던 내용을 잠깐 치워두거나 다시 꺼냅니다.</td></tr>
+          <tr><td>🔄 Sync</td><td>pull → add → commit → push</td><td>네 단계를 한 번에 순서대로 실행합니다.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="reveal" style="margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;">
+      <p style="font-size:14px;color:var(--text);font-weight:600;margin-bottom:4px;">🧪 콘솔창에서 연습해보기</p>
+      <p style="font-size:13.5px;color:var(--text-dim);margin-bottom:4px;">아래 명령어를 복사해서 화면 오른쪽 아래 Git 콘솔창에 붙여넣고 실행해보세요. 조회만 하는 안전한 명령어입니다.</p>
+      <div class="code-row"><code>status</code><button class="copy-btn">복사</button></div>
+      <div class="code-row"><code>log --oneline -5</code><button class="copy-btn">복사</button></div>
+      <div class="code-row"><code>diff</code><button class="copy-btn">복사</button></div>
+    </div>
+
+    <p class="mono" style="margin-top:26px;color:var(--text-faint);font-size:13px;">더 궁금한 용어 살펴보기</p>
+    <div class="reveal" style="margin-top:10px;" id="glossaryAccordion">
+      <details class="accordion-item">
+        <summary>커밋(Commit)이 뭔가요? <span class="plus mono">+</span></summary>
+        <div class="accordion-body">"여기까지 작업한 내용을 하나로 묶어서 저장"하는 행위입니다. 저장할 때마다 무엇을 바꿨는지 짧은 메모(커밋 메시지)를 함께 남깁니다.</div>
+      </details>
+      <details class="accordion-item">
+        <summary>브랜치(Branch)가 뭔가요? <span class="plus mono">+</span></summary>
+        <div class="accordion-body">원본(주로 <code>main</code>)은 그대로 두고 별도의 작업 공간을 하나 더 만드는 기능입니다. 화면 상단 브랜치 메뉴에서 선택할 수 있고, <span class="mono">(원격 전용)</span>이라고 표시된 항목은 아직 내 컴퓨터엔 없고 GitHub에만 있는 브랜치입니다 — 선택하면 자동으로 받아옵니다.</div>
+      </details>
+      <details class="accordion-item">
+        <summary>충돌(Conflict)이 뭔가요? <span class="plus mono">+</span></summary>
+        <div class="accordion-body">같은 파일의 같은 부분을 나와 다른 사람이 서로 다르게 고쳤을 때, Git이 어느 쪽을 남길지 스스로 정하지 못하는 상태입니다. 파일을 열어 표시된 부분을 직접 정리한 뒤 다시 Add·커밋하면 해결됩니다.</div>
+      </details>
+      <details class="accordion-item">
+        <summary>스테이징(Staging)이 뭔가요? <span class="plus mono">+</span></summary>
+        <div class="accordion-body">저장(커밋)하기 전에 "이번엔 이 파일들을 저장할게요"라고 미리 담아두는 단계입니다. GitEasy에서는 이 단계가 <b>Add</b> 버튼입니다.</div>
+      </details>
+      <details class="accordion-item">
+        <summary>Git 콘솔창은 언제 쓰나요? <span class="plus mono">+</span></summary>
+        <div class="accordion-body">오른쪽 아래 입력창에 <code>git</code>을 빼고 명령어만 입력하면(예: <code>log --oneline -5</code>) 직접 실행할 수 있습니다. ↑ / ↓ 키로 이전 명령을 다시 불러올 수 있어 조금 더 익숙해진 뒤 활용하면 좋습니다.</div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ================= FAQ ================= -->
+  <section class="section" id="faq" data-node data-color="warn">
+    <div class="commit-line">
+      <span class="commit-dot" style="background:var(--c-warn);--dot-dim:var(--c-warn-dim)"></span>
+      <span class="commit-hash">d47c19</span>
+      <span class="commit-tag docs">docs:</span>
+      <span>자주 묻는 질문</span>
+    </div>
+    <h2 class="reveal">자주 묻는 질문</h2>
+    <p class="kicker reveal">교육 중 가장 많이 나온 질문들을 모았습니다.</p>
+
+    <div class="reveal">
+      <details class="accordion-item">
+        <summary>실수로 아무 버튼이나 눌렀어요. 되돌릴 수 있나요? <span class="plus mono">+</span></summary>
+        <div class="accordion-body">대부분의 버튼은 안전합니다. 파일을 지우거나 되돌리기 어려운 명령(예: <code>--hard</code>, <code>--force</code>, <code>clean</code>)을 콘솔창에서 직접 입력할 때만 "정말 실행할까요?" 확인창이 한 번 더 뜹니다. 그 외 Add·커밋·Push는 데이터를 삭제하지 않으니 편하게 눌러보셔도 됩니다.</div>
+      </details>
+      <details class="accordion-item">
+        <summary>브랜치가 뭔지 몰라도 써도 되나요? <span class="plus mono">+</span></summary>
+        <div class="accordion-body">네, 대부분의 업무는 <code>main</code> 브랜치 하나만으로 충분합니다. 브랜치는 여러 사람이 동시에 다른 실험을 진행할 때 필요한 개념이니, 필요해지면 그때 "용어 사전" 섹션을 다시 참고하세요.</div>
+      </details>
+      <details class="accordion-item">
+        <summary>충돌이 났는데 혼자 해결 못 하겠어요. <span class="plus mono">+</span></summary>
+        <div class="accordion-body">오류 도우미 창에서 📋 <b>오류 내용 복사</b>를 눌러 내용을 복사한 뒤, 충돌난 파일 목록과 함께 담당자나 팀 채널에 붙여넣어 공유해주세요. 화면만 보여줘도 어디서 문제가 생겼는지 바로 파악할 수 있습니다.</div>
+      </details>
+      <details class="accordion-item">
+        <summary>인터넷이 없어도 쓸 수 있나요? <span class="plus mono">+</span></summary>
+        <div class="accordion-body">파일 수정, Add, Commit(내 컴퓨터에 기록 저장)까지는 인터넷 없이도 가능합니다. 다만 Push·Pull·Fetch처럼 GitHub와 주고받는 동작은 인터넷 연결이 필요합니다.</div>
+      </details>
+      <details class="accordion-item">
+        <summary>Git이 컴퓨터에 설치되어 있어야 하나요? <span class="plus mono">+</span></summary>
+        <div class="accordion-body">네. GitEasy는 화면(UI)만 제공하고, 실제 작업은 컴퓨터에 설치된 Git 프로그램을 통해 이뤄집니다. 처음 설치 시 IT 담당 부서의 안내에 따라 Git이 함께 설치되어 있는지 확인해주세요.</div>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p class="mark">// end of manual</p>
+    <h3 style="margin-top:14px;">이제 첫 커밋을 남겨볼 차례입니다</h3>
+    <p>궁금한 점은 화면의 말풍선과 <b style="color:var(--text)">📖 Git 명령어 설명서</b>, 그리고 이 매뉴얼을 먼저 확인해주세요. 그래도 해결되지 않으면 담당 부서로 문의해주세요.</p>
+    <a href="#start" class="btn btn-primary">처음으로 돌아가 다시 보기 ↑</a>
+
+    <div class="copyright">
+      <span>© 2026 MI기술팀 · Jason</span>
+      <span class="sep">·</span>
+      <span>GitEasy 매뉴얼</span>
+    </div>
+  </div>
+</footer>
+
+<button class="toc-fab" id="tocFab" aria-label="목차 열기">≡</button>
+<nav class="toc-panel" id="tocPanel" aria-label="목차"></nav>
+
+<script>
+(function(){
+  "use strict";
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- hero canvas: drifting commit-graph dots ---------- */
+  var canvas = document.getElementById('heroCanvas');
+  if (canvas && !reduceMotion) {
+    var ctx = canvas.getContext('2d');
+    var W, H, DPR = Math.min(window.devicePixelRatio || 1, 2);
+    var nodes = [];
+    var COLORS = ['#58a6ff','#3fb950','#bc8cff','#d29922'];
+
+    function resize(){
+      W = canvas.parentElement.clientWidth;
+      H = canvas.parentElement.clientHeight;
+      canvas.width = W * DPR; canvas.height = H * DPR;
+      canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+    }
+    function initNodes(){
+      nodes = [];
+      var count = Math.max(18, Math.floor(W / 70));
+      for (var i=0;i<count;i++){
+        nodes.push({
+          x: Math.random()*W, y: Math.random()*H,
+          vx: (Math.random()-0.5)*0.18, vy: (Math.random()-0.5)*0.18,
+          r: 1.6 + Math.random()*1.8,
+          c: COLORS[i % COLORS.length]
+        });
+      }
+    }
+    resize(); initNodes();
+    window.addEventListener('resize', function(){ resize(); initNodes(); });
+
+    var maxDist = 130;
+    function tick(){
+      ctx.clearRect(0,0,W,H);
+      for (var i=0;i<nodes.length;i++){
+        var n = nodes[i];
+        n.x += n.vx; n.y += n.vy;
+        if (n.x < -20) n.x = W+20; if (n.x > W+20) n.x = -20;
+        if (n.y < -20) n.y = H+20; if (n.y > H+20) n.y = -20;
+      }
+      for (i=0;i<nodes.length;i++){
+        for (var j=i+1;j<nodes.length;j++){
+          var a = nodes[i], b = nodes[j];
+          var dx = a.x-b.x, dy = a.y-b.y;
+          var d = Math.sqrt(dx*dx+dy*dy);
+          if (d < maxDist){
+            ctx.strokeStyle = 'rgba(148,163,184,' + (0.14 * (1 - d/maxDist)) + ')';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+          }
+        }
+      }
+      for (i=0;i<nodes.length;i++){
+        var n2 = nodes[i];
+        ctx.beginPath();
+        ctx.arc(n2.x, n2.y, n2.r, 0, Math.PI*2);
+        ctx.fillStyle = n2.c;
+        ctx.globalAlpha = 0.85;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  /* ---------- scroll progress spine fill ---------- */
+  var spineFill = document.getElementById('spineFill');
+  var mainEl = document.querySelector('main.spine-wrap');
+  function updateSpine(){
+    if (!spineFill || !mainEl) return;
+    var rect = mainEl.getBoundingClientRect();
+    var total = mainEl.offsetHeight;
+    var viewportMid = window.innerHeight * 0.5;
+    var scrolled = viewportMid - rect.top;
+    var pct = Math.max(0, Math.min(1, scrolled / total));
+    spineFill.style.height = (pct*100) + '%';
+  }
+  document.addEventListener('scroll', function(){ requestAnimationFrame(updateSpine); }, {passive:true});
+  window.addEventListener('resize', updateSpine);
+  updateSpine();
+
+  /* ---------- reveal + node in-view ---------- */
+  var revealEls = document.querySelectorAll('.reveal, .section .commit-line');
+  if ('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting){
+          e.target.classList.add('in-view');
+        }
+      });
+    }, {threshold:0.18, rootMargin:'0px 0px -8% 0px'});
+    revealEls.forEach(function(el){ io.observe(el); });
+  } else {
+    revealEls.forEach(function(el){ el.classList.add('in-view'); });
+  }
+
+  /* ---------- UI tour ---------- */
+  var tourButtons = document.querySelectorAll('.tour-nav button');
+  var descriptions = {
+    'zone-top': {
+      title: '① 상단 바',
+      text: '저장소를 처음 GitHub에서 받아올 땐 <b>복제(Clone)</b>, 이미 받아둔 폴더를 다시 열 땐 <b>폴더 열기</b>를 씁니다. 마지막에 연 저장소는 자동으로 기억되어 다음 실행 때 바로 열립니다.',
+      chips: ['복제(Clone) = git clone', '폴더 열기 = 로컬 폴더 연결']
+    },
+    'zone-branch': {
+      title: '② 브랜치 표시줄',
+      text: '현재 브랜치와, GitHub보다 내가 얼마나 앞서/뒤처져 있는지를 보여줍니다. <span class="mono">(원격 전용)</span> 브랜치를 선택하면 자동으로 받아와 전환됩니다.',
+      chips: ['↑ 앞섬 = 아직 안 올린 내 작업', '↓ 뒤처짐 = 아직 안 받은 팀 작업']
+    },
+    'zone-files': {
+      title: '③ 파일 · Add',
+      text: '수정된 파일이 자동으로 목록에 뜹니다. 체크 후 Add 하면 다음 커밋에 포함됩니다.',
+      chips: ['선택 Add → = git add <파일>', '전체 Add = git add .']
+    },
+    'zone-log': {
+      title: '④ 로그 · 콘솔',
+      text: '모든 작업 기록이 실시간으로 쌓입니다. 아래 입력창에 git 명령어를 직접 입력해 실행할 수도 있습니다.',
+      chips: ['↑ / ↓ = 이전 명령 다시 불러오기']
+    },
+    'zone-actions': {
+      title: '⑤ 실행 버튼',
+      text: 'GitHub와 주고받는 모든 동작이 여기 모여 있습니다. 익숙해지면 초록색 🔄 Sync 버튼 하나로 끝낼 수 있습니다.',
+      chips: ['Pull/Push (스마트) = 자동 처리 포함', '🔄 Sync = 4단계 한 번에']
+    }
+  };
+  var descEl = document.getElementById('tourDesc');
+  tourButtons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      tourButtons.forEach(function(b){ b.classList.remove('active'); });
+      document.querySelectorAll('.zone').forEach(function(z){ z.classList.remove('highlight'); });
+      btn.classList.add('active');
+      var targetId = btn.getAttribute('data-target');
+      var target = document.getElementById(targetId);
+      if (target) target.classList.add('highlight');
+      var d = descriptions[targetId];
+      if (d && descEl){
+        descEl.innerHTML = '<h4>'+d.title+'</h4><p>'+d.text+'</p><div class="chips">' +
+          d.chips.map(function(c){ return '<span class="chip">'+c+'</span>'; }).join('') + '</div>';
+      }
+    });
+  });
+
+  /* ---------- stepper ---------- */
+  var stepBtns = document.querySelectorAll('.step-btn');
+  var stepPanels = document.querySelectorAll('.step-panel');
+  stepBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var n = btn.getAttribute('data-step');
+      stepBtns.forEach(function(b){
+        b.classList.remove('active');
+        if (parseInt(b.getAttribute('data-step'),10) < parseInt(n,10)) b.classList.add('done');
+        else b.classList.remove('done');
+      });
+      btn.classList.add('active');
+      stepPanels.forEach(function(p){
+        p.classList.toggle('active', p.getAttribute('data-panel') === n);
+      });
+    });
+  });
+
+  /* ---------- copy buttons (progressive enhancement) ---------- */
+  document.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var code = btn.parentElement.querySelector('code');
+      if (!code) return;
+      var text = code.textContent;
+      function done(){
+        var old = btn.textContent;
+        btn.textContent = '복사됨 ✓';
+        btn.classList.add('copied');
+        setTimeout(function(){ btn.textContent = old; btn.classList.remove('copied'); }, 1600);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(done).catch(function(){});
+      }
+    });
+  });
+
+  /* ---------- TOC ---------- */
+  var tocPanel = document.getElementById('tocPanel');
+  var tocFab = document.getElementById('tocFab');
+  var sections = document.querySelectorAll('.section[data-node]');
+  var colorMap = {pull:'var(--c-pull)', add:'var(--c-add)', warn:'var(--c-warn)', error:'var(--c-error)', smart:'var(--c-smart)'};
+  sections.forEach(function(sec){
+    var titleEl = sec.querySelector('h2');
+    var color = colorMap[sec.getAttribute('data-color')] || 'var(--c-pull)';
+    var a = document.createElement('a');
+    a.href = '#' + sec.id;
+    a.innerHTML = '<span class="dot" style="background:'+color+'"></span>' + (titleEl ? titleEl.textContent : sec.id);
+    a.addEventListener('click', function(){ tocPanel.classList.remove('open'); });
+    tocPanel.appendChild(a);
+  });
+  tocFab.addEventListener('click', function(){ tocPanel.classList.toggle('open'); });
+  document.addEventListener('click', function(e){
+    if (!tocPanel.contains(e.target) && e.target !== tocFab && tocPanel.classList.contains('open')){
+      tocPanel.classList.remove('open');
+    }
+  });
+})();
+</script>
