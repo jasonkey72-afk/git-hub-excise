@@ -1,5 +1,7 @@
 import json
 import queue
+import shlex
+import subprocess
 import threading
 from pathlib import Path
 
@@ -8,6 +10,60 @@ from tkinter import filedialog, messagebox
 from git import Repo, GitCommandError, InvalidGitRepositoryError, NoSuchPathError
 
 CONFIG_PATH = Path(__file__).with_name("_gitCommand_config.json")
+
+
+class ToolTip:
+    """마우스를 올리면 설명이 뜨는 말풍선."""
+
+    def __init__(self, widget, text, delay=350, wraplength=320):
+        self.widget = widget
+        self.text = text
+        self.delay = delay
+        self.wraplength = wraplength
+        self.tip_window = None
+        self._after_id = None
+        widget.bind("<Enter>", self._schedule, add="+")
+        widget.bind("<Leave>", self._hide, add="+")
+        widget.bind("<ButtonPress>", self._hide, add="+")
+
+    def _schedule(self, _event=None):
+        self._cancel()
+        self._after_id = self.widget.after(self.delay, self._show)
+
+    def _cancel(self):
+        if self._after_id:
+            self.widget.after_cancel(self._after_id)
+            self._after_id = None
+
+    def _show(self):
+        if self.tip_window or not self.text:
+            return
+        x = self.widget.winfo_rootx() + 10
+        y = self.widget.winfo_rooty() + self.widget.winfo_height() + 6
+        tw = self.tip_window = ctk.CTkToplevel(self.widget)
+        tw.wm_overrideredirect(True)
+        tw.wm_geometry(f"+{x}+{y}")
+        tw.attributes("-topmost", True)
+        label = ctk.CTkLabel(
+            tw,
+            text=self.text,
+            justify="left",
+            fg_color=("#FFFFDB", "#3a3a2e"),
+            text_color=("#000000", "#FFFFFF"),
+            corner_radius=6,
+            wraplength=self.wraplength,
+        )
+        label.pack(padx=10, pady=6)
+
+    def _hide(self, _event=None):
+        self._cancel()
+        if self.tip_window:
+            self.tip_window.destroy()
+            self.tip_window = None
+
+
+def add_tooltip(widget, text):
+    return ToolTip(widget, text)
 
 
 class GitConflictError(Exception):
@@ -158,6 +214,41 @@ class GitService:
 CHANGE_LABEL = {"A": "[추가]", "M": "[수정]", "D": "[삭제]", "R": "[이름변경]", "U": "[신규]"}
 LOG_PREFIX = {"info": "  ", "success": "✔ ", "warning": "⚠ ", "error": "✖ "}
 
+GIT_GLOSSARY = [
+    ("저장소 시작하기", [
+        ("git init", "현재 폴더를 새로운 Git 저장소로 만듭니다. 새 프로젝트를 시작할 때 한 번만 사용합니다."),
+        ("git clone <URL>", "GitHub 등 원격 저장소 전체를 내 컴퓨터로 복사해옵니다. UI의 '복제(Clone)' 버튼과 같은 동작입니다."),
+    ]),
+    ("상태 확인하기", [
+        ("git status", "어떤 파일이 바뀌었는지, 스테이징 되었는지 확인합니다. UI의 '새로고침'과 파일 목록이 이 정보를 보여줍니다."),
+        ("git diff", "실제로 어떤 줄이 어떻게 바뀌었는지 자세히 비교해서 보여줍니다."),
+        ("git log", "지금까지의 커밋(작업 기록)을 시간순으로 보여줍니다."),
+    ]),
+    ("변경사항 저장하기", [
+        ("git add <파일>", "특정 파일을 다음 커밋에 포함되도록 등록(스테이징)합니다. UI의 '선택 스테이징'과 같은 동작입니다."),
+        ("git add .", "바뀐 파일을 전부 한 번에 등록합니다. UI의 '전체 스테이징'과 같은 동작입니다."),
+        ("git restore --staged <파일>", "스테이징을 취소합니다. UI의 '선택 취소'와 같은 동작입니다."),
+        ("git commit -m \"메시지\"", "스테이징된 변경사항을 저장소 기록에 하나의 커밋으로 남깁니다. UI의 '커밋' 버튼과 같은 동작입니다."),
+    ]),
+    ("원격 저장소와 동기화하기", [
+        ("git fetch", "원격에 어떤 새 커밋이 있는지만 확인합니다. 내 파일이나 브랜치는 바뀌지 않습니다."),
+        ("git pull", "원격의 최신 내용을 받아서 내 브랜치에 합칩니다. UI의 'Pull (스마트)'는 여기에 자동 stash/충돌 안내를 더한 것입니다."),
+        ("git push", "내가 만든 커밋을 원격 저장소로 올립니다. UI의 'Push (스마트)'는 거부되면 자동으로 pull 후 재시도합니다."),
+    ]),
+    ("브랜치 다루기", [
+        ("git branch", "브랜치 목록을 보여줍니다."),
+        ("git checkout <브랜치>  (또는 git switch <브랜치>)", "다른 브랜치로 이동합니다. UI에서는 상단 브랜치 선택 메뉴가 이 역할을 합니다."),
+        ("git merge <브랜치>", "다른 브랜치의 내용을 지금 브랜치로 합칩니다."),
+    ]),
+    ("임시로 치워두기", [
+        ("git stash", "커밋하지 않은 변경사항을 잠깐 따로 보관해서 작업 폴더를 깨끗하게 만듭니다. UI의 'Stash 저장'과 같은 동작입니다."),
+        ("git stash pop", "보관해둔 변경사항을 다시 불러옵니다. UI의 'Stash 복원'과 같은 동작입니다."),
+    ]),
+    ("문제 생겼을 때", [
+        ("충돌(conflict)", "같은 부분을 서로 다르게 고쳤을 때 Git이 자동으로 합치지 못하는 상태입니다. 파일을 열어 <<<<<<< / ======= / >>>>>>> 표시 사이를 직접 정리한 뒤 다시 스테이징/커밋해야 합니다."),
+    ]),
+]
+
 
 class App(ctk.CTk):
     def __init__(self):
@@ -191,17 +282,34 @@ class App(ctk.CTk):
         ctk.CTkLabel(top, text="저장소:").grid(row=0, column=0, padx=(10, 5), pady=10)
         self.path_label = ctk.CTkLabel(top, text="(열린 저장소 없음)", anchor="w")
         self.path_label.grid(row=0, column=1, sticky="ew", pady=10)
-        ctk.CTkButton(top, text="폴더 열기", width=100, command=self.on_open_folder).grid(row=0, column=2, padx=5)
-        ctk.CTkButton(top, text="복제(Clone)", width=100, command=self.on_clone).grid(row=0, column=3, padx=(5, 10))
+
+        open_btn = ctk.CTkButton(top, text="폴더 열기", width=100, command=self.on_open_folder)
+        open_btn.grid(row=0, column=2, padx=5)
+        add_tooltip(open_btn, "이미 내 컴퓨터에 있는 Git 저장소 폴더를 엽니다.\n(아직 GitHub에서 받은 적이 없다면 '복제(Clone)'를 먼저 사용하세요)")
+
+        clone_btn = ctk.CTkButton(top, text="복제(Clone)", width=100, command=self.on_clone)
+        clone_btn.grid(row=0, column=3, padx=5)
+        add_tooltip(clone_btn, "GitHub 등 원격 저장소의 URL을 입력하면\n저장소 전체를 내 컴퓨터로 처음 복사해옵니다. (git clone과 동일)")
+
+        help_btn = ctk.CTkButton(
+            top, text="📖 Git 명령어 설명서", width=150,
+            fg_color="transparent", border_width=1, command=self.on_show_git_help,
+        )
+        help_btn.grid(row=0, column=4, padx=(5, 10))
+        add_tooltip(help_btn, "자주 쓰는 Git 명령어들을 초보자 눈높이로 설명하는 창을 엽니다.")
 
         status = ctk.CTkFrame(self)
         status.grid(row=1, column=0, sticky="ew", padx=10, pady=5)
         ctk.CTkLabel(status, text="브랜치:").pack(side="left", padx=(10, 5), pady=8)
         self.branch_menu = ctk.CTkOptionMenu(status, values=["-"], command=self.on_branch_selected, width=160)
         self.branch_menu.pack(side="left", pady=8)
+        add_tooltip(self.branch_menu, "저장소의 브랜치 목록입니다. 다른 브랜치를 선택하면\n그 브랜치로 전환됩니다. (git checkout <브랜치>와 동일)")
         self.ahead_behind_label = ctk.CTkLabel(status, text="")
         self.ahead_behind_label.pack(side="left", padx=15)
-        ctk.CTkButton(status, text="새로고침", width=90, command=self.refresh_status).pack(side="right", padx=10, pady=8)
+        add_tooltip(self.ahead_behind_label, "↑ 앞섬: 아직 push 안 한 내 커밋 수\n↓ 뒤처짐: 아직 pull 안 받은 원격 커밋 수")
+        refresh_btn = ctk.CTkButton(status, text="새로고침", width=90, command=self.refresh_status)
+        refresh_btn.pack(side="right", padx=10, pady=8)
+        add_tooltip(refresh_btn, "파일 상태, 브랜치, 원격과의 앞섬/뒤처짐 정보를 다시 불러옵니다. (git status와 비슷)")
 
         body = ctk.CTkFrame(self, fg_color="transparent")
         body.grid(row=2, column=0, sticky="nsew", padx=10, pady=5)
@@ -221,8 +329,14 @@ class App(ctk.CTk):
 
         stage_btns = ctk.CTkFrame(files_frame, fg_color="transparent")
         stage_btns.grid(row=2, column=0, sticky="ew", padx=10)
-        self._action_button(stage_btns, "선택 스테이징 →", self.on_stage_selected).pack(side="left")
-        self._action_button(stage_btns, "전체 스테이징", self.on_stage_all).pack(side="left", padx=5)
+        self._action_button(
+            stage_btns, "선택 스테이징 →", self.on_stage_selected,
+            tooltip="체크한 파일만 다음 커밋 대상으로 등록합니다. (git add <파일>과 동일)",
+        ).pack(side="left")
+        self._action_button(
+            stage_btns, "전체 스테이징", self.on_stage_all,
+            tooltip="변경된 모든 파일을 한 번에 커밋 대상으로 등록합니다. (git add . 와 동일)",
+        ).pack(side="left", padx=5)
 
         ctk.CTkLabel(files_frame, text="스테이징된 파일", anchor="w").grid(row=3, column=0, sticky="new", padx=10, pady=(10, 0))
         self.staged_frame = ctk.CTkScrollableFrame(files_frame, height=150)
@@ -230,7 +344,10 @@ class App(ctk.CTk):
 
         unstage_btns = ctk.CTkFrame(files_frame, fg_color="transparent")
         unstage_btns.grid(row=5, column=0, sticky="ew", padx=10, pady=(0, 10))
-        self._action_button(unstage_btns, "← 선택 취소", self.on_unstage_selected).pack(side="left")
+        self._action_button(
+            unstage_btns, "← 선택 취소", self.on_unstage_selected,
+            tooltip="체크한 파일을 스테이징에서 제외합니다. (git restore --staged <파일>과 동일)",
+        ).pack(side="left")
 
         log_frame = ctk.CTkFrame(body)
         log_frame.grid(row=0, column=1, sticky="nsew", padx=(5, 0))
@@ -240,29 +357,77 @@ class App(ctk.CTk):
         self.log_box = ctk.CTkTextbox(log_frame, state="disabled")
         self.log_box.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
 
+        console_frame = ctk.CTkFrame(log_frame, fg_color="transparent")
+        console_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=(0, 10))
+        console_frame.grid_columnconfigure(0, weight=1)
+
+        self.command_history = []
+        self.history_index = 0
+
+        self.command_entry = ctk.CTkEntry(
+            console_frame, placeholder_text="git 명령어 입력 (예: status, log --oneline -5, diff)...",
+            font=ctk.CTkFont(family="Consolas", size=12),
+        )
+        self.command_entry.grid(row=0, column=0, sticky="ew", padx=(0, 5))
+        self.command_entry.bind("<Return>", self.on_run_command)
+        self.command_entry.bind("<Up>", self._history_prev)
+        self.command_entry.bind("<Down>", self._history_next)
+        add_tooltip(
+            self.command_entry,
+            "git bash처럼 git 명령어를 직접 입력해서 실행합니다.\n"
+            "앞의 'git'은 생략해도 됩니다. (예: status, add ., commit -m \"메시지\")\n"
+            "↑ / ↓ 로 이전에 입력한 명령어를 다시 불러올 수 있습니다.",
+        )
+
+        run_btn = self._action_button(console_frame, "실행", self.on_run_command, width=70)
+        run_btn.grid(row=0, column=1)
+        add_tooltip(run_btn, "입력한 git 명령어를 현재 저장소에서 실행합니다.")
+
         commit_frame = ctk.CTkFrame(self)
         commit_frame.grid(row=3, column=0, sticky="ew", padx=10, pady=5)
         commit_frame.grid_columnconfigure(0, weight=1)
         self.commit_entry = ctk.CTkEntry(commit_frame, placeholder_text="커밋 메시지 입력...")
         self.commit_entry.grid(row=0, column=0, sticky="ew", padx=(10, 5), pady=10)
-        self._action_button(commit_frame, "커밋", self.on_commit, width=100).grid(row=0, column=1, padx=(5, 10))
+        add_tooltip(self.commit_entry, "여기에 입력한 문구가 커밋 메시지로 사용됩니다.\n예: '로그인 버그 수정'")
+        self._action_button(
+            commit_frame, "커밋", self.on_commit, width=100,
+            tooltip="스테이징된 변경사항을 저장소 기록에 남깁니다. 왼쪽 입력창의 문구가\n커밋 메시지로 쓰입니다. (git commit -m \"메시지\"와 동일)",
+        ).grid(row=0, column=1, padx=(5, 10))
 
         actions = ctk.CTkFrame(self)
         actions.grid(row=4, column=0, sticky="ew", padx=10, pady=(5, 10))
-        self._action_button(actions, "Fetch", self.on_fetch).pack(side="left", padx=10, pady=10)
-        self._action_button(actions, "Pull (스마트)", self.on_pull).pack(side="left", padx=5)
-        self._action_button(actions, "Push (스마트)", self.on_push).pack(side="left", padx=5)
-        self._action_button(actions, "Stash 저장", self.on_stash_save).pack(side="left", padx=5)
-        self._action_button(actions, "Stash 복원", self.on_stash_pop).pack(side="left", padx=5)
+        self._action_button(
+            actions, "Fetch", self.on_fetch,
+            tooltip="원격 저장소의 최신 정보만 확인합니다. 내 파일은 바뀌지 않고\n원격에 새 커밋이 있는지만 알아냅니다. (git fetch와 동일)",
+        ).pack(side="left", padx=10, pady=10)
+        self._action_button(
+            actions, "Pull (스마트)", self.on_pull,
+            tooltip="원격의 최신 내용을 받아와 내 브랜치에 합칩니다. 커밋 안 된 변경사항이\n있으면 자동으로 stash 후 복원해줍니다. (git pull을 안전하게 자동화)",
+        ).pack(side="left", padx=5)
+        self._action_button(
+            actions, "Push (스마트)", self.on_push,
+            tooltip="내가 만든 커밋을 원격 저장소로 올립니다. 원격에 새 커밋이 있어\n거부되면 자동으로 먼저 pull한 뒤 다시 push합니다. (git push를 안전하게 자동화)",
+        ).pack(side="left", padx=5)
+        self._action_button(
+            actions, "Stash 저장", self.on_stash_save,
+            tooltip="커밋하지 않은 변경사항을 임시로 따로 보관해서\n작업 폴더를 깨끗한 상태로 되돌립니다. (git stash와 동일)",
+        ).pack(side="left", padx=5)
+        self._action_button(
+            actions, "Stash 복원", self.on_stash_pop,
+            tooltip="Stash에 보관해둔 변경사항을 다시 불러옵니다. (git stash pop과 동일)",
+        ).pack(side="left", padx=5)
         sync_btn = self._action_button(
             actions, "🔄 Sync (Pull → Commit → Push)", self.on_sync,
             fg_color="#2e7d32", hover_color="#1b5e20",
+            tooltip="Pull(스마트) → (메시지가 있으면) 전체 스테이징+커밋 → Push(스마트)를\n순서대로 한 번에 실행합니다. '최신화하고 내 작업 올리기'를 한 번에 끝냅니다.",
         )
         sync_btn.pack(side="right", padx=10)
 
-    def _action_button(self, parent, text, command, **kwargs):
+    def _action_button(self, parent, text, command, tooltip=None, **kwargs):
         btn = ctk.CTkButton(parent, text=text, command=command, **kwargs)
         self.action_buttons.append(btn)
+        if tooltip:
+            add_tooltip(btn, tooltip)
         return btn
 
     # ---------- logging ----------
@@ -325,6 +490,109 @@ class App(ctk.CTk):
                 self.log(f"복제 실패: {e}", "error")
 
         self._run_in_thread(task)
+
+    def on_show_git_help(self):
+        win = ctk.CTkToplevel(self)
+        win.title("Git 명령어 설명서")
+        win.geometry("620x650")
+        win.attributes("-topmost", True)
+
+        scroll = ctk.CTkScrollableFrame(win, label_text="자주 쓰는 Git 명령어")
+        scroll.pack(fill="both", expand=True, padx=15, pady=15)
+
+        for category, items in GIT_GLOSSARY:
+            ctk.CTkLabel(
+                scroll, text=category, anchor="w",
+                font=ctk.CTkFont(size=15, weight="bold"),
+            ).pack(anchor="w", pady=(15, 5), fill="x")
+            for cmd, desc in items:
+                row = ctk.CTkFrame(scroll, fg_color=("gray90", "gray20"))
+                row.pack(anchor="w", fill="x", pady=3)
+                ctk.CTkLabel(
+                    row, text=cmd, anchor="w",
+                    font=ctk.CTkFont(family="Consolas", size=13, weight="bold"),
+                ).pack(anchor="w", padx=10, pady=(6, 0))
+                ctk.CTkLabel(
+                    row, text=desc, anchor="w", justify="left", wraplength=540,
+                ).pack(anchor="w", padx=10, pady=(0, 6))
+
+    # ---------- git console ----------
+    DESTRUCTIVE_TOKENS = ("--hard", "--force", "-f", "-fd", "-fdx", "clean")
+
+    def _looks_destructive(self, args):
+        return any(a in self.DESTRUCTIVE_TOKENS for a in args)
+
+    def on_run_command(self, event=None):
+        if not self.git.repo:
+            messagebox.showinfo("안내", "먼저 저장소를 열어주세요.")
+            return None
+
+        raw = self.command_entry.get().strip()
+        if not raw:
+            return None
+
+        try:
+            args = shlex.split(raw)
+        except ValueError as e:
+            messagebox.showerror("명령어 오류", f"명령어를 해석할 수 없습니다: {e}")
+            return None
+        if args and args[0] == "git":
+            args = args[1:]
+        if not args:
+            return None
+
+        self.command_entry.delete(0, "end")
+        self.command_history.append(raw)
+        self.history_index = len(self.command_history)
+
+        if self._looks_destructive(args) and not messagebox.askyesno(
+            "주의", f"'git {' '.join(args)}' 명령어는 되돌리기 어려운 변경을 만들 수 있습니다.\n정말 실행할까요?"
+        ):
+            self.log(f"$ git {' '.join(args)}  (사용자가 취소함)", "warning")
+            return None
+
+        def task():
+            self.log(f"$ git {' '.join(args)}", "info")
+            try:
+                result = subprocess.run(
+                    ["git", *args], cwd=self.git.path,
+                    capture_output=True, text=True, encoding="utf-8", errors="replace",
+                )
+            except FileNotFoundError:
+                self.log("git 실행 파일을 찾을 수 없습니다. Git이 설치되어 있는지 확인하세요.", "error")
+                return
+
+            if result.stdout.strip():
+                self.log(result.stdout.rstrip("\n"), "info")
+            if result.returncode != 0:
+                self.log(result.stderr.rstrip("\n") or f"(종료 코드 {result.returncode})", "error")
+            elif result.stderr.strip():
+                self.log(result.stderr.rstrip("\n"), "warning")
+            self._ui(self.refresh_status)
+
+        self._run_in_thread(task)
+        return "break"
+
+    def _history_prev(self, event=None):
+        if not self.command_history:
+            return "break"
+        self.history_index = max(0, self.history_index - 1)
+        self._set_command_text(self.command_history[self.history_index])
+        return "break"
+
+    def _history_next(self, event=None):
+        if not self.command_history:
+            return "break"
+        self.history_index = min(len(self.command_history), self.history_index + 1)
+        if self.history_index == len(self.command_history):
+            self._set_command_text("")
+        else:
+            self._set_command_text(self.command_history[self.history_index])
+        return "break"
+
+    def _set_command_text(self, text):
+        self.command_entry.delete(0, "end")
+        self.command_entry.insert(0, text)
 
     # ---------- status refresh ----------
     def refresh_status(self):
